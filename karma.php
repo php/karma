@@ -10,6 +10,7 @@ namespace Karma;
 
 const KARMA_FILE = '/home/dsp/dev/php/SVNROOT/global_avail';
 const REPO_URL = '/home/dsp/dev/php/src/php-src.git';
+const PREFIX = 'php-src/';
 
 class GitReceiveHook {
     const GIT_EXECUTABLE = 'git';
@@ -135,6 +136,7 @@ if (empty($requested_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
+$requested_paths = array_map(function ($x) { return PREFIX . $x;}, $requested_paths);
 $unavail_paths = get_unavail_paths($_ENV['REMOTE_USER'], $requested_paths, $karma_file);
 
 if (!empty($unavail_paths)) {
