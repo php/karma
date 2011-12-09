@@ -1,0 +1,398 @@
+# This files controls access (or 'karma') to the various CVS modules.
+# The basic syntax is 'avail|user1,user2|directory1,directory2'. See
+# SVNROOT/pre-commit for more details.
+# By default, we make everything unavailable.
+
+unavail
+
+# Some people also have access to the configuration files in the SVNROOT.
+
+avail|sterling,goba,imajes,wez,iliaa,derick,jon,alan_k,jmcastagnetto,mj,pajoye,helly,philip,stas,johannes,gwynne,lsmith,bjori,dsp|SVNROOT
+
+# Some PEAR people get access to the pear-specific avail file in SVNROOT.
+
+avail|davidc,ashnazg,clockwerx,cweiske,gauthierm,kguest,saltybeagle,shupp|SVNROOT/pear_avail
+
+# The PHP Developers have full access to the full source trees for
+# PHP, as well as the documentation.
+
+avail|patrickallaert,mgdm,pierrick,ilewis,mkoppanen,lstrojny,dharmap,kraghuba,stevseea,colder,lwe,auroraeosrose,mike,rolland,cawa,msisolak,alan_k,rrichards,tal,mfischer,fmk,hirokawa,jah,eschmid,dbeu,sebastian,samjam,avsm,ronabob,derick,sterling,venaas,stas,hholzgra,cmv,phildriscoll,jmoore,andre,jani,sr,david,jdonagher,chagenbu,jon,elixer,joosters,jason,mysql,kalowsky,opaquedave,steinm,phanto,gluke,svanegmond,rjs,vlad,jimjag,emile,wez,sasha,camber,ohrn,romolo,martin,lurcher,wsanchez,dreid,bmcadams,swm,zhang,kevin,joey,entity,cardinal,coar,jflemer,raphael,danda,rbb,mboeren,dougm,edink,alexwaugh,bernd,zak,sesser,yohgaki,imajes,markonen,dickmeiss,helly,sander,jan,kir,aaron,jwoolley,pbannister,rvenkat,dali,rodif_bl,hyanantha,witten,georg,msopacua,mpdoremus,fujimoto,iliaa,chregu,azzit,gschlossnagle,andrey,dan,moriyoshi,dviner,bfrance,flex,iwakiri,john,harrie,pollita,ianh,k.schroeder,dcowgill,jerenkrantz,jay,ddhill,jorton,thetaphi,abies,vincent,goba,dmitry,pajoye,shie,rafi,magnus,tony2001,johannes,dbs,skoduru,nrathna,jesus,gopalv,bjori,nlopess,wrowe,shire,zoe,scottmac,t2man,dsp,davidw,ab5602,nicholsr,lsmith,cellog,davidc,felipe,robinf,jmessa,philip,sixd,gwynne,ant,kalle,mattwil,sfox,hnangelo,ohill,indeyets,felixdv,mich4ld,lbarnaud,cseiler,sean,dkelsey,tabe,ericstewart,mbeccati,sebs,garretts,guenter,srinatar,basantk,geissert,salathe,aharvey,mj,gron,uw,fat,cataphract,sbeattie,acurioso,lytboris,shm,fa|php/php-src,pecl,phpdoc,phd,web/doc,web/doc-editor
+
+# Engine karma is further restricted (this line MUST come after lines granting
+# php-src karma and before lines granting Zend/TSRM karma)
+unavail||php/php-src/*/Zend,php/php-src/*/TSRM
+
+# PEAR bits in the main php-src module
+avail|mj,vblavet,dickmann,tal,jmcastagnetto,alexmerz,cellog,pajoye,timj,clay,dufuz,bjori,davidc,saltybeagle,derick|php/php-src/*/pear
+
+# Some people have access to tests in the Engine
+avail|ilewis,magnus,michael,zoe,jmessa,sfox,tomerc,felixdv,kalle,philip,patrickallaert|php/php-src/*/Zend/tests
+
+# fastcgi implementation for IIS
+avail|shane,wez,edink|php/fastcgi-isapi
+
+# Win Installer
+avail|edink,jmertic,pajoye|php/win-installer
+
+# Testfest web
+avail|davidc,lsmith,goldoraf,zoe|web/php-testfest
+
+# Some people only work on PhD (The DocBook [manual] build system)
+# Those with php-src and/or phpdoc karma already have access to this
+avail|loudi,cweiske,mrkschan,pmjones|phd,web/doc,web/doc-editor
+
+# People who work on the Engine - not people with just tests access
+avail|andi,zeev,andrei,stas,sterling,sascha,derick,sebastian,phanto,jani,hirokawa,fujimoto,rvenkat,sesser,kalowsky,iliaa,hyanantha,georg,wez,edink,helly,hholzgra,imajes,gschlossnagle,moriyoshi,dmitry,jon,pollita,tony2001,johannes,bjori,davidw,nicholsr,wharmby,felipe,robinf,scottmac,nlopess,mattwil,colder,lbarnaud,pajoye,cseiler,dsp,shire,gron|php/php-src/*/Zend,php/php-src/*/TSRM
+
+# The PHP Documentation Group maintains the documentation and its
+# translations.
+
+avail|lucas,jmertic,bobby,takagi,gcc,cem,mfp,ansriniv,jsgoupil,mazzanet,frogger,coldocean,fleaslob,torben,lynch,kk,ted,paul,mbritton,bibi,mrobinso,perugini,tzwenny,drews,paulsen,hartmann,leon,jonen,tschuer,tfromm,manuel,danbeck,sli,jmcastagnetto,mohrt,samesch,soneca,ronabop,glace,latoserver,rafael,jcmeloni,chrullrich,mk,troels,mathieu,phaethon,mj,corean,pandach,cycle98,vizvil,regina,cynic,jpm,dams,karoora,pcraft,suvia,zimt,ftfuture,ag315,bbonev,afortaleza,neotron,cg,delrom,jkj,hellekin,kgergely,cnewbill,fuzzy74,bjoern,fams,smasiello,dim,lucasr,cpereira,ernani,theseer,noribsd,subjective,ufux,hadar_p,asautins,dbenson,aleczapka,tom,amiller,cortesi,rarruda,betz,alindeman,thyla,cucinato,zyprexia,tpug,mitja,conni,sts,nmav,subbie,leszek,spheroid,slawek,alan_dangelo,ae,nohn,kaser01,visualmind,kurtz,luk,tronic,moh,gerzson,webler,spooky,cece,daniel,boo,nhoizey,joerg,hakan,chief977,shlomi,raful,yuval,tomer,barak,ido,mork,lior,gal,adiju,cr_depend,florian,kappu,muricaru,dt,critix,ck,costra,fancao0515,tibee,eriksson,wenz,bs,anderson,matroz,ave,adu,mmeier,wentzel,scaro,aspinei,lmaxcar,manuzhai,darvina,peter,maxim,romakhin,n0nick,attila,sagi,kai,microbrain,rhheo,shimi,djworld,emil,lboshell,netholic,dmitry83,progcom,verdana,yincheng,surfmax,nicos,bbd,cyril,gregory,hudzilla,klean,mignoni,wiesemann,xqi,mersal,zruya,sean,staybyte,aber_sabeel,alzahrani,thomaslio,jippie,antonio,ahxiao,akcakayaa,allhibi,aner,black,class007,digo,dima,dorons,eshare,hpop1,itay,juppie,mrmatrix,saad,thomasgm,xbite,tobsn,jome,analytik,outsider,heymarcel,asmodean,bader,elmaystro,sp,truelight,gnuhacker,_batman_,sachat,dallas,dejan,zer0fill,steve3d,lm92,bradmssw,tahani,victor,erica,simonh,phpman,mrphp,notarius,joseph,mmkhajah,mohammed,proton,klootz,takashima,leoca,ahmad,abobader,fboudot,wurm,hakawy,felix,ahmedss,mahrous2020,yorgo,gal_ga,abodive,ama,andras,hassen,jkhdk,okamura,popov,xman,fernandoc,avenger,hwin,tix,alrehawi_,liuming,ramysaweres,astone,shiflett,jaenecke,bdensley,adamchan,jingfs,murphy,potatotsang,the_q,jsheets,xelis,equerci,phpcatala,tofanini,umut,kriga,ray,royhuggins,logician,almanar,alexws,gonik,haiaw,lkwang_cn,shadowwulf,telecart,pongsakorn,naveed,shivas,tularis,angela,decorj,hitcho,kevinkee,nmee,thx1140,crotalus,didou,novotnyr,sil,traduim,gui,mgf,ivanr,michal,tsirman,momo,cysoft,firefox,kouber,mipac,muslem,tomysk,vemarkov,garth,lord_lele,stone,laacz,retnug,ernestyang,hatem,house,luisdaniel,nizar,nvivo,seth,tomh,danguer,adam,nio,wassago,beeven,colacino,zvaranka,cesarguru,chubu,dark2907,portoban,reven,wizzard,sywr,koendw83,rylin,webstudio,jsjohnst,dmanusset,et,pitiphan,mbr,cdalar,alrashoudi,hafid,enough,zhouhao007,jnorbi,lorenzohgh,denisr,coder03,jcclaros,thomas,freeman,rioter,jschultz,davey,belleto,jtacon,yuw,elfyn,noam,nathan,salman,cheezy,ene,rezaiqbal,purnomo,dufiga_php,ftp_geo,udhien,prio,luckyguy354,maf,handi,meme,satiri,maddankara,rildo,hd,ali,lpj,adhitama,engkongs,preilly,dave,marcelo,curt,fd,javi,mrmaster,fa,vrana,apaxx,pjotrik,marduk,narcotia1234,enloma,trizo,xmadda,redshift,alifikri,coder,dodol_maniac,eflorin,adywarna,kyokpae,milans,lovchy,spermwhale,phaze,baoengb,derek,yannick,daan,xxiengb,ott,mg,kennyt,tomsommer,poz,zamolxe,bishmila,ph1,irchtml,rogamer,bortolini,sapfir,guru,ahmed,robinhood,sohli,amt,romain,hlecuanda,thessoro,nforbes,jolan,laze,bagilevi,young,shakaali,chokobo,portalufpa,teecee,blindman,holst,schst,mnv,sodhi,aidan,jellybob,lauer,shenkong,jad,robert,peterhuewe,ogre,techtonik,narigone,realtebo,krid,mclay,dasch,miwaniec,abdshomad,sammywg,aeoris,mez,jed,hsc,luckec,dmytton,choudesh,phpvcn,simp,michael,grantc,atex,katja,sthulbourn,mikl,kevinsz,roast,tessus,gavinfo,rant,ramsey,arkadius,erinet,omar,oliver,rquadling,timo,shadda,joeaccord,ezyang,ljbuesch,knut,asonge,ron,nicobn,jacques,void,mcbrown,simionea,preinheimer,stanprog,msaraujo,asbjornit,philippe,sezer,rmlr,hradtke,alan,danielc,danbrown,alexxed,psalehpoor,loudi,abedford,morgue,nilgun,saltybeagle,dedemorton,eniac2008,jawed,ch,mgdm,ericstewart,mager,keito,juxecl,chx,vito,beverloo,joris,mumumu,brandon,santiago,ajcollison,rbowen,ruslany,satoruyoshida,seld,degeberg,yago,seros,dtajchreber,jwage,ambrish,shein,frozenfire,x1v4nx,carlos,nikola,baijh,nullw0rm,danielb,thijs,orientalcoder,sh_mashaqi,dominis,irfan,dre,marionunes,ditto,mirry,superb,moacir,itanea,vitali,duodraco,craigkitterman,mfonda,nbpoole,ircmaxell,nikic,kassner,lyma,gmsecrieru,cyberline,avb,chunsong,jguerin|phpdoc,phd,web/doc,web/doc-editor
+
+# The PHP Web Group maintains www.php.net, news.php.net, bugs.php.net,
+# people.php.net, master.php.net, wiki.php.net, pecl.php.net and qa.php.net.
+
+avail|salathe,scottmac,jmertic,lsmith,johannes,ilia,cmv,tcobb,gareth,jah,eschmid,ronabop,derick,sterling,stas,phildriscoll,jmoore,andre,jani,david,lyric,zimt,mk,goba,zak,jmcastagnetto,dams,tom,jacques,sebastian,georg,mj,imajes,cortesi,sander,markonen,edink,jan,victor,mfischer,wez,sesser,pollita,alindeman,magnus,iliaa,philip,didou,sfox,sean,dufuz,nlopess,pajoye,helly,tony2001,bjori,felipe,dsp,aharvey,danbrown,moacir,till,vrana|web/php,web/php-bugs,web/php-master,web/php-news,web/php-hosts,web/php-wiki,web/php-people,web/pecl,web/qa
+
+avail|degeberg,tyrael|web/php-bugs
+avail|danielc|web/php
+avail|ericstewart|web/php/*/archive
+avail|odoucet|web/php-news/,web/qa/
+avail|shein|web/php-news/
+avail|dragoonis,seld|web/php/
+avail|stewartlord|web/php/,web/php-master/
+
+# The PHP Presentation Group has access to the presentations on the
+# conf.php.net site.
+
+avail|toby,sterling,jon,graeme,derick,imajes,wez,iliaa,jmcastagnetto,shiflett,nohn,sebastian,vmarshall,alan_k,lhl,eru,sklar,wenz,zak,gschlossnagle,jacques,pollita,amt,john,hholzgra,pajoye,helly,dbs,vrana,kore,philip,kguest|web/pres2,web/presentations
+
+# The PHP Quality Assurance Team maintains their own website.
+
+avail|ilia,jalal,zak,andre,lyric,jmoore,ronabop,sebastian,joey,jani,torben,hellekin,cnewbill,bate,yohgaki,jan,imajes,derick,msopacua,nohn,edink,iliaa,helly,sean,nlopess,tony2001,zoe,johannes,lsmith,stevseea,felixdv,scottmac,ericstewart,bjori,pajoye,philip,auroraeosrose|web/qa
+
+# Some people get only access to specific languages for phpdoc
+avail|diab,daif,salehcoder|phpdoc/ar
+avail|noihex,mfalgas,ereza,ebi,ait,jabro,eduardcapell,oriolm,yagooar,jeprubio,marctm|phpdoc/ca
+avail|mkoula|phpdoc/cs
+avail|penguin,tkxs|phpdoc/da
+avail|kore,thorstenr,lapistano,raphaelm|phpdoc/de
+avail|mgonzalezle,ianasa,gustavo,soywiz,ladderalice,ideados,fcaroberga,dulasoft,benjamin,argosback,tatai,jesusruiz,jpberdejo,lduran,sabathorn,julionc,jorgeeolayap,jesus_cova,edwincartagenah,gerardocdc,hcrow,jmperez,agarzon,chuso,jesusdiez,ruben,marcogrossisas,juanmi,bng5,lehmer,jvenegasperu,hugo_quinter,numerico|phpdoc/es
+avail|parstic|phpdoc/fa
+avail|butera|phpdoc/it
+avail|magidev,mikaelkael,jpauli|phpdoc/fr
+avail|xdanger,jiania,haohappy,hytest,herrywood,honestqiao|phpdoc/zh,phpdoc/hk,phpdoc/tw
+avail|chappy,ayame|phpdoc/hu
+avail|adezm|phpdoc/id
+avail|elf,shimooka,masugata,masakielastic|phpdoc/ja
+avail|acidd15|phpdoc/kr
+avail|neonz|phpdoc/lv
+avail|erkje,oebe,janwb|phpdoc/nl
+avail|cyb0org,lach,adi|phpdoc/pl
+avail|aferreira,thiago|phpdoc/pt
+avail|machado,scar,davis,dnfeitosa,thiago,amandavale,rafa|phpdoc/pt_BR
+avail|radical,shoty|phpdoc/ro
+avail|freespace,shafff,sveta,wanderer,kozloffsky,santiago,seprize,irker|phpdoc/ru
+avail|cumhuronat,gulenzek,xhandros,neoprobe,faruk,infralite,flarecaster,antimon,yelekin,ecamalan|phpdoc/tr
+avail|pfischer|phpdoc/es
+avail|grossolini|web/php-wiki
+
+# access to the pecl website etc
+avail|dufuz,pajoye,wez,pollita,tal,mj,helly,john,iliaa,edink,jan,derick,jon,cellog,philip,jani,johannes,sfox,gloob,till,tyrael|web/pecl,pecl
+
+# access to the newly cut pecl4win website
+avail|edink,derick|web/pecl4win
+
+avail|dbs|web/pecl
+
+# General pecl
+avail|auroraeosrose,ohill,csilles,t2k269,jhannus,moriyoshi,spankin,pqf,lebsack,acmurthy,markus,omar,dsp|pecl
+
+# access to gcov.php.net website.
+avail|helly,ilia,nlopess,pronych,felixdv,felipe|web/php-gcov
+
+# The PHP-GTK Group has access to the PHP-GTK code and documentation.
+
+avail|kalle,mgdm,fmk,mfischer,alan_k,amaza,descript,cweiske,jani,pablo,sfox,jsjohnst,jp,anant,scottmattocks,auroraeosrose,bmajdak,akshat,derick,felipe|gtk/php-gtk,gtk/php-gtk-doc
+
+# The PHP-GTK Documentation Group has access to the PHP-GTK
+# documentation.
+
+avail|jmoore,sfox,pgod,henning,manu,cortesi,rambik,hirokawa,thomasgm,jstarkey,fernandoc,richy,simon,josx,didou,derick,nicos,bens,andreas,cweiske,horst,ramsey,scottmattocks,jsjohnst,mmdrake,dnfeitosa,mikespook|gtk/php-gtk-doc
+
+# The PHP-GTK Web Group has access to the PHP-GTK website.
+
+avail|fmk,jmoore,cmv,alan_k,sfox,imajes,ramsey,cweiske,scottmattocks,anant,auroraeosrose,mmdrake,mgdm|gtk/php-gtk-web
+
+# Some CVS modules have a ChangeLog file that is automatically updated
+# by a program that commits as user 'changelog'.
+
+avail|changelog|php/php-src,gtk/php-gtk
+
+# Some people have access to change the day-to-day code on the various php.net machines
+avail|imajes,edink,derick,sfox,wez,goba,mj,pajoye,bjori,philip,danbrown,rlms,dsp,felipe|systems
+
+# Finally, there are various people with access to various bits and
+# pieces of other SVN modules.
+
+avail|sterling,derick,imajes,phanto,sebastian,helly,jan|pecl/adt
+avail|beckerr,val,shire|pecl/apc
+avail|atex|pecl/rpmreader
+avail|wez,sterling,edink,derick,tal,bs,magnus|php/php-src/*/sapi/embed,web/embed
+avail|alan_k|gtk/php-gtk/ext/gtkhtml,gtk/php-gtk/ext/scintilla
+avail|akshat|gtk/php-gtk/ext/cairo
+avail|jmoore,alan_k|gtk/php-gtk/generator
+avail|sterling|php/php-src/*/ext/bz2
+avail|grantc|php/php-src/*/ext/ingres_ii,pecl/ingres
+avail|tal,behnam|php/php-src/*/ext/fribidi
+avail|bmcadams|php/php-src/*/ext/ccvs
+avail|phanto,abrown|php/php-src/*/ext/com
+avail|steinm|php/php-src/*/ext/cpdf
+avail|hholzgra|php/php-src/*/ext/ctype
+avail|sterling,eyal|php/php-src/*/ext/curl
+avail|evan|php/php-src/*/ext/cybercash
+avail|spages|php/php-src/*/ext/cybermut
+avail|steinm,jarkol,zenderx,chregu,jtate,thoralf|php/php-src/*/ext/domxml
+avail|steinm|php/php-src/*/ext/fdf
+avail|alan_k|php/php-src/*/ext/dio
+avail|chad,sesser|php/php-src/*/ext/filepro
+avail|askalski|php/php-src/*/ext/ftp
+avail|jah,ttoohey,smantoor|php/php-src/*/ext/gd
+avail|alex|php/php-src/*/ext/gettext
+avail|steinm|php/php-src/*/ext/hyperwave
+avail|musone|php/php-src/*/ext/icap
+avail|fmk|php/php-src/*/ext/iisfunc
+avail|veebert,musone,askalski,chagenbu,rjs3|php/php-src/*/ext/imap
+avail|danny,nyenyon,borg73,nobbie|php/php-src/*/ext/informix
+avail|jah,aeschbacher,daniela,ludoo,abies,mariuz|php/php-src/*/ext/interbase
+avail|jamuel,thewitness|php/php-src/*/ext/snmp,phpdoc,php/php-src/*/NEWS,php/php-src/*/UPGRADING
+avail|akilov,stoddard,wenz,tjw|php/php-src/*/ext/java
+avail|amitay,cardoe|php/php-src/*/ext/ldap
+avail|yohgaki,fujimoto,dets|php/php-src/*/ext/mbstring,php/php-src/*/ext/pgsql,php/php-src/*/NEWS
+avail|masugata|php/php-src/*/ext/mbstring
+avail|musone,chagenbu|php/php-src/*/ext/mcal
+avail|derick|php/php-src/*/ext/mcrypt
+avail|fmk|php/php-src/*/ext/mssql
+avail|asautins,dbenson,maxim,ray,abonamous,ldixon|php/php-src/*/ext/oci8
+avail|kara,fmk,sschadt,nicos|php/php-src/*/ext/odbc
+avail|venaas|php/php-src/*/ext/openssl
+avail|mitch,kara|php/php-src/*/ext/oracle,pecl/oracle
+avail|nmav|php/php-src/ext/*/ovrimos,pecl/ovrimos
+avail|steinm|php/php-src/*/ext/pdf
+avail|jdonagher,david|php/php-src/*/ext/pfpro,pecl/pfpro
+avail|jah,chriskl|php/php-src/*/ext/pgsql,phpdoc/en/*/reference/pgsql,php/php-src/*/ext/pdo_pgsql
+avail|jharris|php/php-src/*/ext/pdo*
+avail|ostborn|php/php-src/*/ext/phpdoc,pecl/phpdoc,pecl/soap
+avail|kk|php/php-src/*/ext/posix
+avail|amos|php/php-src/*/ext/qtdom
+avail|kk|php/php-src/*/ext/recode
+avail|sterling|php/php-src/*/ext/sablot
+avail|eriksson|php/php-src/*/ext/satellite
+avail|chrisv,sterling|php/php-src/*/ext/sockets
+avail|sterling|php/php-src/*/ext/swf
+avail|tommay,pwmoosman,thekid|php/php-src/*/ext/sybase_ct
+avail|tommay,vvtk|php/php-src/*/ext/sysvsem
+avail|nyenyon,vvtk|php/php-src/*/ext/sysvshm
+avail|vvtk|php/php-src/*/ext/sysvipc
+avail|david,bbonev,bordavide|pecl/vpopmail
+avail|atrak|php/php-src/*/ext/yp
+avail|sr|php/php-src/*/ext/zlib
+avail|sterling|php/php-src/*/ext/zziplib
+avail|staybyte|php/php-src/*/ext/ming
+avail|sklar|php/php-src/*/sapi/apache
+avail|neotron|php/php-src/*/sapi/caudium
+avail|chip|php/php-src/*/sapi/apache2filter
+avail|chip|php/php-src/*/sapi/apache2handler
+avail|abelits|php/php-src/*/sapi/fhttpd
+avail|joosters,phanto|php/php-src/*/sapi/isapi
+avail|holger|php/php-src/*/sapi/pi3web
+avail|akilov,stoddard,gtanzilli|php/php-src/*/sapi/servlet
+avail|phanto,jtate|php-src/win32
+avail|georg|php/php-src/*/ext/ncurses
+avail|bradmssw|php/php-src/*/ext/mcve,pecl/mcve
+avail|iliaa|php/php-src/*/ext/shmop
+avail|jtate,skettler|pecl/crack
+avail|dmcfarli|pecl/staf
+avail|areaz2|pecl/dazuko
+avail|nicos|php/php-src/*/ext/readline
+avail|phallstrom|gtk/php-gtk-web/apps,gtk/php-gtk-web/include/apps.inc
+avail|tal,momo|php/php-src/*/ext/calendar
+avail|momo|php/php-src/*/ext/standard
+avail|mbretter,philippe|pecl/radius,pecl/mqseries
+avail|mcmontero,blade106,scottmac|pecl/imagick
+avail|mg|pecl/lzf
+avail|mg|pecl/tcpwrap
+avail|mg|pecl/xdiff
+avail|mg|pecl/xattr
+avail|xnoguer|pecl/valkyrie
+avail|ecolinet|pecl/win32std
+avail|rquadling|pecl/win32service
+avail|aleigh|php/php-src/*/sapi/continuity
+avail|jwk|php/php-src/*/sapi/opengroupware
+avail|makler|pecl/esmtp
+avail|wenlong,shenkong|pecl/freeimage
+avail|marcot|pecl/pop3
+avail|ch|pecl/idn
+avail|schst,luckec|pecl/id3
+avail|gabe,jlesueur|pecl/zeroconf
+avail|curt|pecl/postparser
+avail|michael|pecl/newt
+avail|michael|pecl/expect
+avail|ccollie,shifu|pecl/i18n
+avail|mksheoran|pecl/daffodildb
+avail|val|pecl/bcompiler,phpdoc
+avail|simenec,ttk|pecl/maxdb,phpdoc/en/reference
+avail|ksadlocha|pecl/simplesql
+avail|eyalt,michael,tomerc,rdohms,wimartin,odoucet,danielc,jmfontaine,jeraimee,tyrael,shein,dtajchreber,yaauie|php/php-src/*/tests,phpdoc
+avail|blindman|pecl/colorer
+avail|mike|pecl/http
+avail|gabe|pecl/intercept
+avail|jon|web/php/extra
+avail|iamsure|web/php
+avail|scottmattocks|gtk/php-gtk/test
+avail|mboeren|pecl/dbx
+avail|mike|pecl/win32ps
+avail|lcastelli|pecl/chdb,phpdoc
+avail|traufeisen,jandrade|pecl/gnupg,phpdoc/en/reference/gnupg
+avail|mikl|pecl/memcache,pecl/wbxml,pecl/ocal,pecl/pam
+avail|ohill|pecl/stem
+avail|gwang|pecl/litespeed,php/php-src/*/sapi/litespeed
+avail|jsjohnst|pecl/flitetts
+avail|mlwmohawk|pecl/msession,pecl/xmldbx
+avail|nabeel|pecl/axis2
+avail|ccollie|php/php-src/*/ext/unicode
+avail|wcandillon|pecl/parse_tree,pecl/xquery
+avail|akalend|pecl/xmlsec
+avail|mb|pecl/stime
+avail|nandika|pecl/axis2
+avail|crafics|pecl/iptcdata
+avail|zhaowei|pecl/mailparse
+avail|wharmby|php/php-src
+avail|void|pecl/bbcode
+avail|sankazim|pecl/amf
+avail|davidc|web/php
+avail|sankazim,zardozrocks|pecl/amfext,phpdoc
+avail|doury|pecl/ims
+avail|va|pecl/yami
+avail|msaraujo,mansion|pecl/lua
+avail|merletenney,kirtig,harveyrd,kuntakinte14,ebatutis,tex,vsavchuk|pecl/intl,pecl/unicode,phpdoc/en/*/reference/intl,php/php-src/*/ext/intl
+avail|kirtig|pecl/rb
+avail|lucas|pecl/apd
+avail|rotsenmarcello|pecl/puno
+avail|lwe,mariuz|pecl/pdo_firebird,php/php-src/*/ext/pdo_firebird,phpdoc
+avail|bdeshong|pecl/usblib
+avail|francois|pecl/phk,pecl/automap
+avail|ramsey|pecl/uploadprogress,pecl/pdo_user
+avail|seariver|pecl/wxwidgets
+avail|pestilence669|pecl/xrange
+avail|mlively,dzenovich|pecl/runkit,pecl/classkit
+avail|thierry|pecl/fam
+avail|hamano|pecl/tcc
+avail|graham,myang|pecl/optimizer
+avail|joonas|pecl/llvm
+avail|indeyets|pecl/spread,pecl/xslcache
+avail|markskilbeck,akshat|pecl/cairo,phpdoc,gtk/php-gtk,gtk/php-gtk-doc
+avail|mgdm|pecl/cairo,pecl/rsvg
+avail|txforward|pecl/txforward
+avail|smantoor|php/php-src/*/ext/standard,php/php-src/*/ext/date
+avail|guilhermeblanco|phpweb
+avail|iodbc|php/php-src/*/ext/odbc
+avail|ross|phpdoc,gd
+avail|ab|pecl/ktaglib
+avail|mabouzou|pecl/sqlanywhere
+avail|jawed,datibbaw|pecl/oauth
+avail|sean|pecl/parsekit
+avail|magicaltux|pecl/proctitle,php/php-src/*/ext/wddx
+avail|mikesul|pecl/ssh2
+avail|rjcarroll|pecl/fuse
+avail|ab|pecl/gender
+avail|kristina|pecl/mongo,phpdoc
+avail|kaigai|pecl/selinux,phpdoc
+avail|kannan,veeve,cjiang|pecl/xhprof,phpdoc
+avail|bhuisgen|pecl/htscanner
+avail|splanquart,fourd|pecl/pdo_4d
+avail|jluedke,hradtke|pecl/gearman
+avail|jluedke|pecl/drizzle
+avail|vito,mkoppanen|pecl/gmagick
+avail|santiago|pecl/gupnp,pecl/sphinx
+avail|basantk|pecl/memsession
+avail|devour|pecl/geoip
+avail|iekpo|pecl/solr,phpdoc
+avail|ruslany,ksingla,donraman|pecl/wincache,phpdoc
+avail|pierrick|pecl/stomp,phpdoc,php/php-src/branches/LEMON
+avail|cyberspice|pecl/dio,pecl/framegrab,phpdoc
+avail|crodas|pecl/textcat,phpdoc
+avail|dmendolia,patrickallaert,dragoonis|pecl/apm,phpdoc
+avail|bd808|pecl/yaml,phpdoc
+avail|dchill42pecl|pecl/xdom,phpdoc
+avail|hradtke|pecl/memcache,phpdoc
+avail|pdezwart,brodriguez|pecl/amqp,phpdoc
+avail|ssufficool|php/php-src/*/ext/pdo_dblib,php/php-src/*/NEWS
+avail|ben|php/php-src/*/tests
+avail|yorambh|pecl/apache_accessor,phpdoc
+avail|koubel|pecl/rrd,phpdoc
+avail|mbechler|pecl/krb5,phpdoc
+avail|cubrid|pecl/cubrid,phpdoc
+avail|treffynnon|pecl/ssdeep,phpdoc
+avail|nicolas|pecl/judy,phpdoc
+avail|martynas|pecl/htscanner,phpdoc
+avail|dthompsono99|pecl/xcb,phpdoc
+avail|tpenner4d|pecl/pdo_4d,phpdoc
+avail|ianb|pecl/svm,phpdoc
+avail|michelec|pecl/rsync,phpdoc
+avail|dsr|pecl/sam,phpdoc
+avail|jtansavatdi|pecl/amqp,phpdoc
+avail|knut|php/php-src/*/tests
+avail|laruence|pecl/yaf,phpdoc
+avail|whereswardy|pecl/handlersocket,phpdoc
+
+
+# Objective-C bridge
+avail|wez,jan|php/php-objc
+
+
+# DB2, SDO, IDS have tighter restrictions, so that IBM are not overly
+# legally encumbered.  If you have contributions for these two extensions,
+# please contact the lead developers.  This is a temporary measure until
+# we can put in place a more general process.
+unavail||pecl/ibm_db2,pecl/sdo,pecl/pdo_ids,pecl/pdo_informix,pecl/pdo_ibm,pecl/sam
+avail|dbs,skoduru,kraman,rs,kfbombar,tessus,ambrish|pecl/ibm_db2,pecl/pdo_ibm
+avail|wez,dbs|php/php-src/*/ext/pdo_odbc
+avail|gcc,cem,mfp,ansriniv,slaws,chm,rs|pecl/sdo
+avail|dbs,kraman,kfbombar,ambrish|pecl/pdo_ids,pecl/pdo_informix,pecl/pdo_ibm
+
+# preprocessor karma
+avail|merlin|pecl/preprocessor
+
+# gd karma
+# Please ask pierre@php.net before adding some unknown guys :)
+# gd/libgd is the library itself, other directories are for
+# the various tools (website, bugs,...)
+avail|pajoye,edink,lhecking,mloskot,nlopess,scottmac,guenter,mattias,kshepherd,chapg,kalle,tabe|gd
+avail|mattias,tabe|php/php-src/*/ext/gd
+
+# bindlib_w32 karma
+# Our bundled version of bindlib (used by php on windows)
+avail|auroraeosrose,scottmac,pajoye,edin|php/bindlib_w32
+
+# bugtracker karma
+avail|bcarlyon,derick|web/bugtracker
+
+# php-internals-win karma
+avail|pajoye,rrichards,auroraeosrose|php/php-internals-win
+avail|pajoye,guilhermeblanco,auroraeosrose,rrichards,kalle,sascham78|web/php-windows
+
+# php-benchmarks karma
+avail|nlopess,pbiggar,olafurw,hjalle|php/php-benchmarks
+
+# phpruntests karma
+avail|zoe,spriebsch,g2|php/phpruntests
+
+# cmake karma (GSOC 2008 project)
+avail|gloob,pierre|php/cmake
+
+# But members of the PHP Group get access to everything.
+# Note: This line MUST be at the end so that it overrides any unavail settings
+avail|andi,andrei,jimw,rasmus,rubys,sas,ssb,thies,zeev,shane
+
+# vim:set ft=conf sw=2 ts=2 et:
