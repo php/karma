@@ -8,11 +8,14 @@
 
 namespace Karma;
 
-const KARMA_FILE = '/home/dsp/dev/php/SVNROOT/global_avail';
-const REPO_URL = '/home/dsp/dev/php/src/php-src.git';
+const KARMA_URL = '/repository/karma.git';
+const KARMA_FILE = 'global_avail';
+
+const REPO_URL = '/repository/php-src.git';
 const PREFIX = 'php-src/';
 
-class GitReceiveHook {
+class GitReceiveHook
+{
     const GIT_EXECUTABLE = 'git';
     const INPUT_PATTERN = '@^([0-9a-f]{40}) SP ([0-9a-f]{40}) SP (\w+)$@i';
 
@@ -29,6 +32,14 @@ class GitReceiveHook {
             }
         }
         return $parsed_input;
+    }
+
+    public function getKarmaFile()
+    {
+        exec(
+            sprintf('%s --git-dir=%s/.git show master:%s',
+                self::GIT_EXECUTABLE, KARMA_URL, KARMA_FILE), $output);
+        return $output;
     }
 
     private function getReceivedPathsForRange($old, $new)
@@ -70,7 +81,7 @@ function accept()
     exit(0);
 }
 
-function get_karma_for_paths($username, array $paths, \Iterator $avail_lines)
+function get_karma_for_paths($username, array $paths, array $avail_lines)
 {
     $access = array_fill_keys($paths, 'unavail');
     foreach ($avail_lines as $acl_line) {
@@ -126,18 +137,16 @@ date_default_timezone_set('UTC');
 putenv("PATH=/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
-$hook       = new GitReceiveHook();
-$karma_file = new \SplFileObject(KARMA_FILE);
-$karma_file->setFlags(\SplFileObject::DROP_NEW_LINE | \SplFileObject::SKIP_EMPTY);
-
-$requested_paths = $hook->getReceivedPaths();
+$hook = new GitReceiveHook();
+$requested_paths = $karma->getReceivedPaths();
 
 if (empty($requested_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
+$avail_lines = $hook->getKarmaFile();
 $requested_paths = array_map(function ($x) { return PREFIX . $x;}, $requested_paths);
-$unavail_paths = get_unavail_paths($_ENV['REMOTE_USER'], $requested_paths, $karma_file);
+$unavail_paths = get_unavail_paths($_ENV['REMOTE_USER'], $requested_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
     deny("You are not allowed to write to " . implode(',', $unavail_paths));
