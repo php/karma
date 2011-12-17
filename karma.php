@@ -197,7 +197,7 @@ date_default_timezone_set('UTC');
 putenv("PATH=/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
-$hook = new GitReceiveHook();
+$hook            = new GitReceiveHook();
 $requested_paths = $hook->getReceivedPaths();
 
 if (empty($requested_paths)) {
