@@ -37,7 +37,7 @@ class GitReceiveHook
     public function getKarmaFile()
     {
         exec(
-            sprintf('%s --git-dir=%s/.git show master:%s',
+            sprintf('%s --git-dir=%s show master:%s',
                 self::GIT_EXECUTABLE, KARMA_URL, KARMA_FILE), $output);
         return $output;
     }
@@ -46,7 +46,7 @@ class GitReceiveHook
     {
         $output = [];
         exec(
-            sprintf('%s --git-dir=%s/.git log --name-only --pretty=format:"" %s..%s',
+            sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
                 self::GIT_EXECUTABLE, REPO_URL, $old, $new), $output);
         return $output;
     }
