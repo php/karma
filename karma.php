@@ -138,7 +138,7 @@ putenv("PATH=/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
 $hook = new GitReceiveHook();
-$requested_paths = $karma->getReceivedPaths();
+$requested_paths = $hook->getReceivedPaths();
 
 if (empty($requested_paths)) {
     deny("We cannot figure out what you comitted!");
