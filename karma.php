@@ -50,6 +50,18 @@ class GitReceiveHook
 
         return realpath($path);
     }
+
+    /**
+     * Parses the input from git.
+     *
+     * Git pipes a list of oldrev, newrev and revname combinations
+     * to the hook. We parse this input. For more information about
+     * the input see githooks(5).
+     *
+     * Returns an array with 'old', 'new', 'refname' keys for each ref that
+     * will be updated.
+     * @return array
+     */
     public function hookInput()
     {
         $parsed_input = [];
@@ -65,6 +77,13 @@ class GitReceiveHook
         return $parsed_input;
     }
 
+    /**
+     * Return the content of the karma file from the karma repository.
+     *
+     * We read the content of the karma file from the karma repository index.
+     *
+     * @return string
+     */
     public function getKarmaFile()
     {
         exec(
@@ -73,6 +92,14 @@ class GitReceiveHook
         return $output;
     }
 
+    /**
+     * Returns an array of files that were updated between revision $old and $new.
+     *
+     * @param string $old The old revison number.
+     * @parma string $new The new revison umber.
+     *
+     * @return array
+     */
     private function getReceivedPathsForRange($old, $new)
     {
         $repourl = $this->getRepositoryPath();
