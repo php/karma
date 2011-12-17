@@ -120,7 +120,7 @@ function get_karma_for_paths($username, array $paths, array $avail_lines)
     return $access;
 }
 
-function get_unavail_paths($username, array $paths, \Iterator $avail_lines)
+function get_unavail_paths($username, array $paths, array $avail_lines)
 {
     return
         array_keys(
