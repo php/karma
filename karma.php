@@ -192,7 +192,12 @@ $requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}
 $unavail_paths   = get_unavail_paths($user, $requested_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
-    deny("You are not allowed to write to\n\t" . implode("\n\t", $unavail_paths));
+    deny(sprintf(
+        "You have insufficient Karma!\n" .
+        "I'm sorry, I cannot allow you to write to\n" .
+        "    %s\n" .
+        "Have a nice day.",
+        implode("\n    ", $unavail_paths)));
 }
 
 accept("Changesets accepted. Thank you.");
