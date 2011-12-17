@@ -144,9 +144,18 @@ if (empty($requested_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
+if (isset($_ENV['HTTP_AUTHORIZATION'])) {
+    /* hacky hack is hacky */
+    $auth  = $_ENV['HTTP_AUTHORIZATION'];
+    $basic = base64_decode(explode(' ', $auth)[1]);
+    $user  = explode(':', $basic)[0];
+} else if (isset($_ENV['SSH_CONNECTION'])) {
+    $user = $_ENV['USER'];
+}
+
 $avail_lines = $hook->getKarmaFile();
 $requested_paths = array_map(function ($x) { return PREFIX . $x;}, $requested_paths);
-$unavail_paths = get_unavail_paths($_ENV['REMOTE_USER'], $requested_paths, $avail_lines);
+$unavail_paths = get_unavail_paths($user, $requested_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
     deny("You are not allowed to write to\n\t" . implode("\n\t", $unavail_paths));
