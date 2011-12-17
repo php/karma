@@ -11,14 +11,45 @@ namespace Karma;
 const KARMA_URL = '/repository/karma.git';
 const KARMA_FILE = 'global_avail';
 
-const REPO_URL = '/repository/php-src.git';
-const PREFIX = 'php-src/';
-
 class GitReceiveHook
 {
     const GIT_EXECUTABLE = 'git';
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
+    /**
+     * Returns the repository name.
+     *
+     * A repository name is the path to the repository without the .git.
+     * e.g. php-src.git -> php-src
+     *
+     * @return string
+     */
+    public function getRepositoryName()
+    {
+        if (preg_match('@/([^/]+)\.git$@', $this->getRepositoryPath(), $matches)) {
+            return $matches[1];
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the path to the current repository.
+     *
+     * Tries to determine the path of the current repository in which
+     * the hook was invoked.
+     *
+     * @return string
+     */
+    public function getRepositoryPath()
+    {
+        $path = exec(sprintf('%s rev-parse --git-dir', self::GIT_EXECUTABLE));
+        if (!is_dir($path)) {
+            return false;
+        }
+
+        return realpath($path);
+    }
     public function hookInput()
     {
         $parsed_input = [];
@@ -44,10 +75,11 @@ class GitReceiveHook
 
     private function getReceivedPathsForRange($old, $new)
     {
-        $output = [];
+        $repourl = $this->getRepositoryPath();
+        $output  = [];
         exec(
             sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
-                self::GIT_EXECUTABLE, REPO_URL, $old, $new), $output);
+                self::GIT_EXECUTABLE, $repourl, $old, $new), $output);
         return $output;
     }
 
@@ -153,9 +185,10 @@ if (isset($_ENV['HTTP_AUTHORIZATION'])) {
     $user = $_ENV['USER'];
 }
 
-$avail_lines = $hook->getKarmaFile();
-$requested_paths = array_map(function ($x) { return PREFIX . $x;}, $requested_paths);
-$unavail_paths = get_unavail_paths($user, $requested_paths, $avail_lines);
+$prefix          = sprintf('php/%s/', $hook->getRepositoryName());
+$avail_lines     = $hook->getKarmaFile();
+$requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $requested_paths);
+$unavail_paths   = get_unavail_paths($user, $requested_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
     deny("You are not allowed to write to\n\t" . implode("\n\t", $unavail_paths));
