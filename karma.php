@@ -17,7 +17,7 @@ const PREFIX = 'php-src/';
 class GitReceiveHook
 {
     const GIT_EXECUTABLE = 'git';
-    const INPUT_PATTERN = '@^([0-9a-f]{40}) SP ([0-9a-f]{40}) SP (\w+)$@i';
+    const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
     public function hookInput()
     {
