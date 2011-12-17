@@ -149,7 +149,7 @@ $requested_paths = array_map(function ($x) { return PREFIX . $x;}, $requested_pa
 $unavail_paths = get_unavail_paths($_ENV['REMOTE_USER'], $requested_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
-    deny("You are not allowed to write to " . implode(',', $unavail_paths));
+    deny("You are not allowed to write to\n\t" . implode("\n\t", $unavail_paths));
 }
 
 accept();
