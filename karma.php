@@ -108,8 +108,9 @@ function deny($reason)
     exit(1);
 }
 
-function accept()
+function accept($message)
 {
+    fwrite(STDOUT, $message . "\n");
     exit(0);
 }
 
@@ -194,4 +195,4 @@ if (!empty($unavail_paths)) {
     deny("You are not allowed to write to\n\t" . implode("\n\t", $unavail_paths));
 }
 
-accept();
+accept("Changesets accepted. Thank you.");
