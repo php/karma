@@ -7,8 +7,7 @@
  */
 namespace Karma;
 
-const KARMA_URL  = '/home/dsp/dev/git.php.net/karma.git';
-const KARMA_FILE = 'global_avail';
+const KARMA_FILE = '/repository/checkout/SVNROOT/global_avail';
 
 class GitReceiveHook
 {
@@ -85,10 +84,7 @@ class GitReceiveHook
      */
     public function getKarmaFile()
     {
-        exec(
-            sprintf('%s --git-dir=%s show master:%s',
-                self::GIT_EXECUTABLE, KARMA_URL, KARMA_FILE), $output);
-        return $output;
+        return file(KARMA_FILE);
     }
 
     /**
