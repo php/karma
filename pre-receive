@@ -5,10 +5,9 @@
  *
  * Licensed under the terms of the MIT license.
  */
-
 namespace Karma;
 
-const KARMA_URL = '/repository/karma.git';
+const KARMA_URL  = '/home/dsp/dev/git.php.net/karma.git';
 const KARMA_FILE = 'global_avail';
 
 class GitReceiveHook
@@ -194,7 +193,7 @@ function get_unavail_paths($username, array $paths, array $avail_lines)
 
 error_reporting(E_ALL | E_STRICT);
 date_default_timezone_set('UTC');
-putenv("PATH=/usr/local/bin:/usr/bin:/bin");
+putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
 $hook            = new GitReceiveHook();
