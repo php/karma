@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 /*
+ * The PHP.net KARMA hook. For git repositories.
+ *
  * (c) 2011 David Soria Parra <dsp at php dot net>
  *
  * Licensed under the terms of the MIT license.
