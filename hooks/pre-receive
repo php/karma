@@ -26,7 +26,7 @@ class GitReceiveHook
      */
     public function getRepositoryName()
     {
-        if (preg_match('@/([^/]+)\.git$@', $this->getRepositoryPath(), $matches)) {
+        if (preg_match('@/([^/]+\.git)$@', $this->getRepositoryPath(), $matches)) {
             return $matches[1];
         }
 
@@ -210,7 +210,7 @@ if (isset($_ENV['HTTP_AUTHORIZATION'])) {
     $user = $_ENV['USER'];
 }
 
-$prefix          = sprintf('php/%s/', $hook->getRepositoryName());
+$prefix          = sprintf('%s/', $hook->getRepositoryName());
 $avail_lines     = $hook->getKarmaFile();
 $requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $requested_paths);
 $unavail_paths   = get_unavail_paths($user, $requested_paths, $avail_lines);
