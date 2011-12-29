@@ -212,7 +212,7 @@ if (isset($_ENV['REMOTE_USER'])) {
     $user = $_ENV['USER'];
 }
 
-fprintf(STDOUT, "Welcome $user\n");
+fprintf(STDOUT, "Welcome $user.\n");
 
 $prefix          = sprintf('%s/', $hook->getRepositoryName());
 $avail_lines     = $hook->getKarmaFile();
