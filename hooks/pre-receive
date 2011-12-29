@@ -228,4 +228,4 @@ if (!empty($unavail_paths)) {
         implode("\n    ", $unavail_paths)));
 }
 
-accept("Changesets accepted. Thank you.");
+accept("Changesets accepted. Thank you for your contribution.");
