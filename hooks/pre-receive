@@ -212,6 +212,8 @@ if (isset($_ENV['REMOTE_USER'])) {
     $user = $_ENV['USER'];
 }
 
+fprintf(STDOUT, "Welcome $user\n");
+
 $prefix          = sprintf('%s/', $hook->getRepositoryName());
 $avail_lines     = $hook->getKarmaFile();
 $requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $requested_paths);
