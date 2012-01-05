@@ -6,6 +6,13 @@ class ReceiveHook
     const GIT_EXECUTABLE = 'git';
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
+    private $karmaFile;
+
+    public function __construct($karma_file)
+    {
+        $this->karmaFile = $karma_file;
+    }
+
     /**
      * Returns the repository name.
      *
@@ -54,7 +61,7 @@ class ReceiveHook
      */
     public function hookInput()
     {
-        $parsed_input = [];
+        static $parsed_input = [];
         while (!feof(STDIN)) {
             $line = fgets(STDIN);
             if (preg_match(self::INPUT_PATTERN, $line, $matches)) {
@@ -76,7 +83,7 @@ class ReceiveHook
      */
     public function getKarmaFile()
     {
-        return file(KARMA_FILE);
+        return file($this->karmaFile);
     }
 
     /**

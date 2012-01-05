@@ -85,7 +85,7 @@ date_default_timezone_set('UTC');
 putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
-$hook            = new \Git\ReceiveHook();
+$hook            = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE);
 $requested_paths = $hook->getReceivedPaths();
 
 if (empty($requested_paths)) {
