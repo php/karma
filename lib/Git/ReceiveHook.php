@@ -1,6 +1,7 @@
 <?php
+namespace Git;
 
-class GitReceiveHook
+class ReceiveHook
 {
     const GIT_EXECUTABLE = 'git';
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
