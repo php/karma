@@ -92,6 +92,7 @@ if (empty($requested_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
+$user = null;
 if (isset($_ENV['REMOTE_USER'])) {
     $user = $_ENV['REMOTE_USER'];
 } else if (isset($_ENV['HTTP_AUTHORIZATION'])) {
@@ -99,8 +100,13 @@ if (isset($_ENV['REMOTE_USER'])) {
     $auth  = $_ENV['HTTP_AUTHORIZATION'];
     $basic = base64_decode(explode(' ', $auth)[1]);
     $user  = explode(':', $basic)[0];
-} else if (isset($_ENV['SSH_CONNECTION'])) {
-    $user = $_ENV['USER'];
+} else if (isset($_ENV['SSH_CONNECTION']) && isset($_ENV['GL_USER'])) {
+    /* gitolite user */
+    $user = $_ENV['GL_USER'];
+}
+
+if (is_null($user)) {
+    deny("Cannot determine user information. Aborted.");
 }
 
 fprintf(STDOUT, "Welcome $user.\n");
