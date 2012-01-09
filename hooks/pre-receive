@@ -9,9 +9,9 @@
  */
 namespace Karma;
 
-const KARMA_FILE = '/repository/checkout/SVNROOT/global_avail';
+const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 
-set_include_path('/repository/checkout/karma/lib' .
+set_include_path('/git/checkout/karma/lib' .
     PATH_SEPARATOR .
     get_include_path());
 
