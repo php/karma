@@ -1,0 +1,17 @@
+The git repositories at git.php.net are handled by gitolite.
+
+How to create a new repository
+------------------------------
+  * Clone git.php.net:gitolite-admin.git
+  * Edit conf/gitolite.conf
+     - add your repository to @public
+  * Create the repository on gitweb with the same name.
+  * Commit
+  * Push
+  * Test it
+
+Mirroring
+---------
+  * Mirroring is done by a post-receive hook
+    https://github.com/miracle2k/gitolite-simple-mirror
+
