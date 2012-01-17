@@ -9,6 +9,7 @@
  */
 namespace Karma;
 
+/* gitolite admin is ignored as access is handled by gitolite acls itself */
 $ignored_repos = ['gitolite-admin.git'];
 
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
