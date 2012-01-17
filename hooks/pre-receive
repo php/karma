@@ -9,6 +9,8 @@
  */
 namespace Karma;
 
+$ignored_repos = ['gitolite-admin.git'];
+
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 
 set_include_path('/git/checkout/karma/lib' .
@@ -110,6 +112,11 @@ if (is_null($user)) {
 }
 
 fprintf(STDOUT, "Welcome $user.\n");
+
+if (in_array($hook->getRepositoryName(), $ignored_repos)) {
+    /* the repository should not be handled */
+    exit(0);
+}
 
 $prefix          = sprintf('%s/', $hook->getRepositoryName());
 $avail_lines     = $hook->getKarmaFile();
