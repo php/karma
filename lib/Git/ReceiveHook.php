@@ -7,10 +7,12 @@ class ReceiveHook
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
     private $karmaFile;
+    private $repositoryBasePath;
 
-    public function __construct($karma_file)
+    public function __construct($karma_file, $base_path)
     {
         $this->karmaFile = $karma_file;
+        $this->repositoryBasePath = $base_path;
     }
 
     /**
@@ -23,7 +25,8 @@ class ReceiveHook
      */
     public function getRepositoryName()
     {
-        if (preg_match('@/([^/]+\.git)$@', $this->getRepositoryPath(), $matches)) {
+        $rel_path = str_replace($this->repositoryBasePath, '', $this->getRepositoryPath());
+        if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
             return $matches[1];
         }
 

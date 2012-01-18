@@ -13,6 +13,7 @@ namespace Karma;
 $ignored_repos = ['gitolite-admin.git'];
 
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
+const REPOSITORY_PATH = '/git/repositories';
 
 set_include_path('/git/checkout/karma/lib' .
     PATH_SEPARATOR .
@@ -88,7 +89,8 @@ date_default_timezone_set('UTC');
 putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
-$hook            = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE);
+$hook = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
+                             getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH);
 $requested_paths = $hook->getReceivedPaths();
 
 if (empty($requested_paths)) {
