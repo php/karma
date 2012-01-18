@@ -89,14 +89,6 @@ date_default_timezone_set('UTC');
 putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
-$hook = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
-                             getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH);
-$requested_paths = $hook->getReceivedPaths();
-
-if (empty($requested_paths)) {
-    deny("We cannot figure out what you comitted!");
-}
-
 $user = null;
 if (isset($_ENV['REMOTE_USER'])) {
     $user = $_ENV['REMOTE_USER'];
@@ -111,9 +103,18 @@ if (is_null($user)) {
 
 fprintf(STDOUT, "Welcome $user.\n");
 
+$hook = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
+                             getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH);
+
 if (in_array($hook->getRepositoryName(), $ignored_repos)) {
     /* the repository should not be handled */
     exit(0);
+}
+
+$requested_paths = $hook->getReceivedPaths();
+
+if (empty($requested_paths)) {
+    deny("We cannot figure out what you comitted!");
 }
 
 $prefix          = sprintf('%s/', $hook->getRepositoryName());
