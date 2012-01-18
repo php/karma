@@ -100,11 +100,6 @@ if (empty($requested_paths)) {
 $user = null;
 if (isset($_ENV['REMOTE_USER'])) {
     $user = $_ENV['REMOTE_USER'];
-} else if (isset($_ENV['HTTP_AUTHORIZATION'])) {
-    /* hacky hack is hacky */
-    $auth  = $_ENV['HTTP_AUTHORIZATION'];
-    $basic = base64_decode(explode(' ', $auth)[1]);
-    $user  = explode(':', $basic)[0];
 } else if (isset($_ENV['SSH_CONNECTION']) && isset($_ENV['GL_USER'])) {
     /* gitolite user */
     $user = $_ENV['GL_USER'];
