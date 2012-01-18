@@ -101,9 +101,24 @@ class ReceiveHook
     {
         $repourl = $this->getRepositoryPath();
         $output  = [];
-        exec(
-            sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
-                self::GIT_EXECUTABLE, $repourl, $old, $new), $output);
+
+        /* there is the case where we push a new branch. check only new commits.
+           in case its a brand new repo, no heads will be available. */
+        if ($old == '0000000000000000000000000000000000000000') {
+            exec(
+                sprintf("%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
+                    self::GIT_EXECUTABLE, $repourl), $output);
+            /* do we have heads? otherwise it's a new repo! */
+            $heads = implode(' ', $output);
+            $not   = count($output) > 0 ? sprintf('--not %s', $heads) : '';
+            exec(
+                sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
+                    self::GIT_EXECUTABLE, $repourl, $not, $new), $output);
+        } else {
+            exec(
+                sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
+                    self::GIT_EXECUTABLE, $repourl, $old, $new), $output);
+        }
         return $output;
     }
 
