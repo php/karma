@@ -4,6 +4,7 @@ Import Steps:
 
   * Deny write access in SVN. Edit SVNROOT/pre-commit
   * Import repository from SVN using svn2git.
+  * Change the repo name in global_avail
 
 New Repository:
 
