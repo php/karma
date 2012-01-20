@@ -114,7 +114,7 @@ class ReceiveHook
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
                 self::GIT_EXECUTABLE, $repourl, escapeshellarg($not),
-                escapeshellarg($new), $output);
+                escapeshellarg($new)), $output);
         } else {
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
