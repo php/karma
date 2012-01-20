@@ -1,14 +1,24 @@
 The git repositories at git.php.net are handled by gitolite.
 
-How to create a new repository
-------------------------------
+Import Steps:
+
+  * Deny write access in SVN. Edit SVNROOT/pre-commit
+  * Import repository from SVN using svn2git.
+
+New Repository:
+
   * Clone git.php.net:gitolite-admin.git
   * Edit conf/gitolite.conf
-     - add your repository to @public
+     - add your repository to @public, or @web
   * Create the repository on gitweb with the same name.
   * Commit
   * Push
   * Test it
+
+For Webstuff:
+
+  * replace svn checkout on rsync with git checkout
+  * edit update-mirrors in systems.git
 
 Mirroring
 ---------
