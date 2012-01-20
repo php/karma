@@ -113,11 +113,13 @@ class ReceiveHook
             $not   = count($output) > 0 ? sprintf('--not %s', $heads) : '';
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
-                    self::GIT_EXECUTABLE, $repourl, $not, $new), $output);
+                self::GIT_EXECUTABLE, $repourl, escapeshellarg($not),
+                escapeshellarg($new), $output);
         } else {
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
-                    self::GIT_EXECUTABLE, $repourl, $old, $new), $output);
+                self::GIT_EXECUTABLE, $repourl, escapeshellarg($old),
+                escapeshellarg($new)), $output);
         }
         return $output;
     }
