@@ -131,4 +131,4 @@ if (!empty($unavail_paths)) {
         implode("\n    ", $unavail_paths)));
 }
 
-accept("Changesets accepted. Thank you for your contribution.");
+accept("Changesets accepted. Thank you for your contribution.\n");
