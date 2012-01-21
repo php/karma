@@ -748,3 +748,7 @@ else
 		generate_email $maxlines | send_mail
 	done
 fi
+
+echo ""
+
+[ -f 'hooks/post-receive.mirror' ] && hooks/post-receive.mirror
