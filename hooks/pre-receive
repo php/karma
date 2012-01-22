@@ -9,9 +9,6 @@
  */
 namespace Karma;
 
-/* gitolite admin is ignored as access is handled by gitolite acls itself */
-$ignored_repos = ['gitolite-admin.git'];
-
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 const REPOSITORY_PATH = '/git/repositories';
 
@@ -106,9 +103,8 @@ fprintf(STDOUT, "Welcome $user.\n");
 $hook = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
                              getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH);
 
-if (in_array($hook->getRepositoryName(), $ignored_repos)) {
-    /* the repository should not be handled */
-    exit(0);
+if ($hook->isKarmaIgnored()) {
+    accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
 $requested_paths = $hook->getReceivedPaths();

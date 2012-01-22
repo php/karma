@@ -16,6 +16,16 @@ class ReceiveHook
     }
 
     /**
+     * Returns true if git option karma.ignored is set, otherwise false.
+     *
+     * @return boolean
+     */
+    public function isKarmaIgnored()
+    {
+        return 'true' === exec(sprintf('%s config karma.ignored', self::GIT_EXECUTABLE));
+    }
+
+    /**
      * Returns the repository name.
      *
      * A repository name is the path to the repository without the .git.
