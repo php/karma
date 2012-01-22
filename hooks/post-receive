@@ -421,7 +421,7 @@ generate_update_branch_email()
 
 		echo "http://git.php.net/?p=$project;a=log;h=$newrev;hp=$oldrev"
 		echo ""
-		echo "Summary of changes: http://git.php.net/?p=$project;a=log;h=$newrev;hp=$oldrev"
+		echo "Summary of changes:"
 		git diff-tree $diffopts $oldrev..$newrev
 
 		echo ""
