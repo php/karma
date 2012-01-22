@@ -6,10 +6,10 @@
 # script does the same thing
 [ -t 0 ] || cat >/dev/null
 
-echo "Attempting to push to mirror"
-
 target=`git config --get gitolite.mirror.simple`
 [ -z "$target" ] && exit 0
+
+echo "Attempting to push to mirror"
 
 if $(echo $target | grep -q "REPO");
 then
@@ -21,7 +21,6 @@ then
 	target=$(echo $target | sed -e "s,REPO,$GL_REPO,g")
 fi
 
-echo "Pushing to mirror repository at $target"
 # Do the mirror push
 git push --mirror $target
 
