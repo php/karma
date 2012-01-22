@@ -736,7 +736,7 @@ maxlines=$(git config hooks.emailmaxlines)
 diffopts=$(git config hooks.diffopts)
 : ${diffopts:="--stat --summary --find-copies-harder"}
 
-echo "Sending notifications to $recipients."
+[ -n "$recipients" ] && echo "Sending notifications to $recipients."
 
 # --- Main loop
 # Allow dual mode: run from the command line just like the update hook, or
