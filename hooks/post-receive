@@ -169,8 +169,6 @@ prep_for_email()
 				config_name="hooks.mailinglist"
 				;;
 		esac
-		echo >&2 "*** $config_name is not set so no email will be sent"
-		echo >&2 "*** for $refname update $oldrev->$newrev"
 		return 1
 	fi
 
