@@ -722,10 +722,19 @@ then
 	projectdesc="UNNAMED PROJECT"
 fi
 
+if [ -n "$GL_USER" ];
+then
+	envelopesender="$GL_USER@php.net"
+elif [ -n "$REMOTE_USER" ];
+then
+	envelopesender="$REMOTE_USER@php.net"
+else
+	envelopesender=$(git config hooks.envelopesender)
+fi
+
 recipients=$(git config hooks.mailinglist)
 announcerecipients=$(git config hooks.announcelist)
-envelopesender=$(git config hooks.envelopesender)
-emailprefix=$(git config hooks.emailprefix || echo '[SCM] ')
+emailprefix=$(git config hooks.emailprefix || echo '[git] ')
 custom_showrev=$(git config hooks.showrev)
 maxlines=$(git config hooks.emailmaxlines)
 diffopts=$(git config hooks.diffopts)
