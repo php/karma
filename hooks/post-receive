@@ -421,7 +421,9 @@ generate_update_branch_email()
 #		echo "not appeared on any other notification email; so we list those"
 #		echo "revisions in full, below."
 
-		echo "Summary of changes:"
+		echo "http://git.php.net/?p=$project;a=log;h=$newrev;hp=$oldrev"
+		echo ""
+		echo "Summary of changes: http://git.php.net/?p=$project;a=log;h=$newrev;hp=$oldrev"
 		git diff-tree $diffopts $oldrev..$newrev
 
 		echo ""
@@ -707,7 +709,8 @@ if [ -z "$GIT_DIR" ]; then
 fi
 
 #projectdesc=$(sed -ne '1p' "$GIT_DIR/description" 2>/dev/null)
-projectdesc=$(pwd | sed -e "s,/git/repositories/,,g" )
+project=$(pwd | sed -e "s,/git/repositories/,,g" )
+projectdesc=$project
 # Check if the description is unchanged from it's default, and shorten it to
 # a more manageable length if it is
 if expr "$projectdesc" : "Unnamed repository.*$" >/dev/null
