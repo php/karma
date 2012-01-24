@@ -13,10 +13,7 @@ echo "Attempting to push to mirror"
 
 if $(echo $target | grep -q "REPO");
 then
-#	if [ -z "$GL_REPO" ];
-#	then
-	    GL_REPO=$(pwd | perl -e '<> =~ /([^\/]+)\.git$/; print $1;');
-#        fi
+	GL_REPO=$(pwd | perl -e '<> =~ /\/git\/repositories\/(.*?)\.git$/; print $1;' | sed s,/,-,g)
 	# Support a REPO variable for wildcard mirrors
 	target=$(echo $target | sed -e "s,REPO,$GL_REPO,g")
 fi
