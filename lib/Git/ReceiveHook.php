@@ -120,7 +120,12 @@ class ReceiveHook
                     self::GIT_EXECUTABLE, $repourl), $output);
             /* do we have heads? otherwise it's a new repo! */
             $heads = implode(' ', $output);
-            $not   = count($output) > 0 ? sprintf('--not %s', escapeshellarg($heads)) : '';
+            if (count($output) > 0) {
+                $not = array_map(
+                    function($x) {
+                        return sprintf('--not %s', escapeshellarg($x));
+                    }, $heads);
+            }
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
                 self::GIT_EXECUTABLE, $repourl, $not,
