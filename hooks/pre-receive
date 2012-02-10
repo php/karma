@@ -3,7 +3,7 @@
 /*
  * The PHP.net KARMA hook. For git repositories.
  *
- * (c) 2011 David Soria Parra <dsp at php dot net>
+ * (c) 2012 David Soria Parra <dsp at php dot net>
  *
  * Licensed under the terms of the MIT license.
  */
@@ -87,11 +87,11 @@ putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
 $user = null;
-if (isset($_ENV['REMOTE_USER'])) {
-    $user = $_ENV['REMOTE_USER'];
-} else if (isset($_ENV['SSH_CONNECTION']) && isset($_ENV['GL_USER'])) {
+if (getenv('REMOTE_USER')) {
+    $user = getenv('REMOTE_USER');
+} else if (getenv('SSH_CONNECTION') && getenv('GL_USER')) {
     /* gitolite user */
-    $user = $_ENV['GL_USER'];
+    $user = getenv('GL_USER');
 }
 
 if (is_null($user)) {
