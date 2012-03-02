@@ -42,6 +42,15 @@ class ReceiveHook
         return '';
     }
 
+    public function mapInput(callable $fn) {
+        $result = [];
+        foreach($this->hookInput() as $input) {
+            $result[] = $fn($input['old'], $input['new']);
+        }
+
+        return $result;
+    }
+
     /**
      * Parses the input from git.
      *
@@ -100,12 +109,12 @@ class ReceiveHook
                 sprintf("%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
                     \Git::GIT_EXECUTABLE, $repourl), $output);
             /* do we have heads? otherwise it's a new repo! */
-            $heads = implode(' ', $output);
             if (count($output) > 0) {
                 $not = array_map(
                     function($x) {
                         return sprintf('--not %s', escapeshellarg($x));
-                    }, $heads);
+                    }, $output);
+                $not = implode(' ', $not);
             }
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
