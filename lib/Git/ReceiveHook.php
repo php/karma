@@ -42,6 +42,15 @@ class ReceiveHook
         return '';
     }
 
+    public function mapInput(callable $fn) {
+        $result = [];
+        foreach($this->hookInput() as $input) {
+            $result[] = $fn($input['old'], $input['new']);
+        }
+
+        return $result;
+    }
+
     /**
      * Parses the input from git.
      *

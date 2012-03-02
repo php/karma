@@ -107,16 +107,18 @@ if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
-$requested_paths = $hook->getReceivedPaths();
+$rep_name  = $hook->getRepositoryName();
+$pi        = new \Git\PushInformation($hook);
+$req_paths = ($pi->isForced()) ? [''] : $req_paths;
 
-if (empty($requested_paths)) {
+if (empty($req_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
-$prefix          = sprintf('%s/', $hook->getRepositoryName());
+$prefix          = sprintf('%s/', $repo_name);
 $avail_lines     = $hook->getKarmaFile();
-$requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $requested_paths);
-$unavail_paths   = get_unavail_paths($user, $requested_paths, $avail_lines);
+$req_paths       = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $req_paths);
+$unavail_paths   = get_unavail_paths($user, $req_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
     deny(sprintf(
