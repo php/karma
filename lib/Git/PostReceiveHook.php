@@ -60,20 +60,55 @@ class PostReceiveHook extends ReceiveHook
         // TODO: check old post-receive for other especial cases
     }
 
+
+    /*
+     * Note:
+     *   * - commits in push,
+     *   digits - simply commits
+     *   chars - branches
+     *   + - commits already in server git repository
+     *   without +  - commits in local git repository
+     *
+     * Situation #1.
+     *
+     *    1+ - 2* - A*
+     *          \
+     *          3* - B*
+     *
+     *  Problem: we have 0-B for B branch in push input data.
+     *  Solution: git rev-list B --not A   ->  3-B     (--not A C D E F ... all branches)
+     *
+     * Situation #2.
+     *    1 - 2 - A
+     *          \
+     *          3* - B*
+     *  Problem: we will have 0-B in rev-list.
+     *  Solution: ?
+     *
+     * Situation #3.
+     *
+     *  1+ - 2+  -   3+ - A+
+     *        \     /
+     *        4* - 5* - B*
+     * Problem: we will have 5-B in rev-list, but what about 4 commit?
+     *
+     * Solution: ?
+     *
+     *
+     * ... more problems
+     *
+     */
     private function sendBranchMail(array $branch)
     {
 
         if ($branch['changetype'] == self::TYPE_UPDATED) {
             $title = "Branch " . $branch['refname'] . " was updated";
-            $message = $title . "\n\n";
         } elseif ($branch['changetype'] == self::TYPE_CREATED) {
             $title = "Branch " . $branch['refname'] . " was created";
-            $message = $title . "\n\n";
         } else {
             $title = "Branch " . $branch['refname'] . " was deleted";
-            $message = $title . "\n\n";
         }
-
+        $message = $title . "\n\n";
 
 
         if ($branch['changetype'] != self::TYPE_DELETED) {
@@ -106,26 +141,56 @@ class PostReceiveHook extends ReceiveHook
 
         if ($tag['changetype'] == self::TYPE_UPDATED) {
             $title = "Tag " . $tag['refname'] . " was updated";
-            $message = $title . "\n\n";
         } elseif ($tag['changetype'] == self::TYPE_CREATED) {
             $title = "Tag " . $tag['refname'] . " was created";
-            $message = $title . "\n\n";
         } else {
             $title = "Tag " . $tag['refname'] . " was deleted";
-            $message = $title . "\n\n";
         }
 
-        if ($tag['changetype'] != self::TYPE_CREATED) $isAnnotatedOldTag = $this->isAnnotatedTag($tag['old']);
-        if ($tag['changetype'] != self::TYPE_DELETED) $isAnnotatedNewTag = $this->isAnnotatedTag($tag['new']);
+        $message = $title . "\n\n";
+
+        if ($tag['changetype'] != self::TYPE_DELETED) {
+            $message .= "Tag info:\n";
+            $isAnnotatedNewTag = $this->isAnnotatedTag($tag['refname']);
+            if ($isAnnotatedNewTag) {
+                $message .= $this->getAnnotatedTagInfo($tag['refname']) ."\n";
+            } else {
+                $message .= $this->getTagInfo($tag['new']) ."\n";
+            }
+        }
+        if ($tag['changetype'] != self::TYPE_CREATED) {
+            $message .= "Old tag sha: \n" . $tag['old'];
+        }
+
 
         // TODO: write info about tag and target
 
         $this->mail($this->emailprefix . '[push] ' . $title , $message);
     }
 
+    private function getTagInfo($tag)
+    {
+        $info = "Target:\n";
+        $info .= $this->execute('git diff-tree --stat --pretty=medium -c %s', $tag);
+        return $info;
+    }
+
+    private function getAnnotatedTagInfo($tag)
+    {
+        $tagInfo = $this->execute('git for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', $tag);
+        list($target, $tagger, $taggerdate) = explode(' ', $tagInfo);
+
+        $info = "Tagger: " . $tagger . "\n";
+        $info .= "Date: " . $taggerdate . "\n";
+        $info .= $this->execute("git cat-file tag %s | sed -e '1,/^$/d'", $tag)."\n";
+        $info .= "Target:\n";
+        $info .= $this->execute('git diff-tree --stat --pretty=medium -c %s', $target);
+        return $info;
+    }
+
     private function isAnnotatedTag($rev)
     {
-        return $this->execute('git for-each-ref --format="%%(objecttype)" %s', $rev) == 'tag';
+        return trim($this->execute('git for-each-ref --format="%%(objecttype)" %s', $rev)) == 'tag';
     }
 
 
@@ -135,7 +200,6 @@ class PostReceiveHook extends ReceiveHook
             'git rev-list %s',
             $revRange
         );
-        $output = trim($output);
         $revisions = $output ? explode("\n", trim($output)) : array();
         return $revisions;
     }
