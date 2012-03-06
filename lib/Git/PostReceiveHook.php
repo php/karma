@@ -36,7 +36,8 @@ class PostReceiveHook extends ReceiveHook
     {
         $args = func_get_args();
         array_shift($args);
-        $output = shell_exec(vsprintf($cmd, $args));
+        $cmd = vsprintf($cmd, $args);
+        $output = shell_exec($cmd);
         return $output;
     }
 
@@ -53,13 +54,18 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
-        // TODO: mail per commit
-        // send mail only about new commits
-        // But for new branches we must check if this branch was
+        // TODO: For new branches we must check if this branch was
         // cloned from other branch in this push - it's especial case
         // TODO: check old post-receive for other especial cases
-    }
 
+        foreach ($this->revisions as $revision => $branches) {
+            // check if it commit was already in other branches
+            if (!$this->isRevExistsInBranches($revision, array_diff($this->allBranches, $branches))) {
+                $this->sendCommitMail($revision);
+            }
+        }
+
+    }
 
     /*
      * Note:
@@ -122,6 +128,8 @@ class PostReceiveHook extends ReceiveHook
                 $revisions = $this->getRevisions($branch['new']. ' --not ' . implode(' ', $this->allBranches));
             }
 
+            $this->cacheRevisions($branch['refname'], $revisions);
+
             $message .= "--------LOG--------\n";
             foreach ($revisions as $revision) {
                 $diff = $this->execute(
@@ -135,6 +143,17 @@ class PostReceiveHook extends ReceiveHook
 
         $this->mail($this->emailprefix . '[push] ' . $title , $message);
     }
+
+
+    private function cacheRevisions($branchName, array $revisions)
+    {
+        //TODO: add mail order from older commit to newer
+        foreach ($revisions as $revision)
+        {
+            $this->revisions[$revision][] = $branchName;
+        }
+    }
+
 
     private function sendTagMail(array $tag)
     {
@@ -161,9 +180,6 @@ class PostReceiveHook extends ReceiveHook
         if ($tag['changetype'] != self::TYPE_CREATED) {
             $message .= "Old tag sha: \n" . $tag['old'];
         }
-
-
-        // TODO: write info about tag and target
 
         $this->mail($this->emailprefix . '[push] ' . $title , $message);
     }
@@ -202,6 +218,26 @@ class PostReceiveHook extends ReceiveHook
         );
         $revisions = $output ? explode("\n", trim($output)) : array();
         return $revisions;
+    }
+
+
+    private function sendCommitMail($revision)
+    {
+        $title = "Commit " . $revision . " was added";
+        $message = $title . "\n\n";
+
+
+        $info = $this->execute('git diff-tree --stat --pretty=fuller -c %s', $revision);
+
+        $message .= $info ."\n\n";
+
+        $message .= "--------DIFF--------\n";
+
+        $diff = $this->execute('git diff-tree -c -p %s', $revision);
+
+        $message .= $diff ."\n\n";
+
+        $this->mail($this->emailprefix . '[commit] ' . $title , $message);
     }
 
 
