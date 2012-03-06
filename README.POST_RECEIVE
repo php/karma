@@ -1,0 +1,84 @@
+Post receive mail script solutions.
+
+
+digits - commits,
+chars - branches (except N & O)
+N, O - new and old revisions in push per branch.
+
+------------
+Branch mail:
+This part contains info only about mail per branch. For mail per commit logic different.
+
+
+    New branch (0..N):
+
+    1 - 2 - A (already on server)
+         \
+          3 - B (pushed)
+
+    We get all commits reachable from new branche and not from all other branches:
+        git rev-list B --not A   ->  3-B
+
+
+    1 - 2 - A (only local)
+         \
+          3 - B (pushed)
+
+    Because A branch not pushed on server before we need mail about all commits including 1-2. e.g. 1-B
+
+
+    1 - 2 - 3 - 4 - A (already on server)
+         \     /
+          5 - 6 - B (pushed)
+
+    We can't know what we need also 5 commit in B, so we mailed only about B commit for this branch.
+    2-6 commits was mailed in A branch.
+
+
+    1 - 2 - 3 - A (already on server)
+         \   \
+          5 - 6 - B (pushed)
+    We can't know what we need also 3 commit in B mail...  any ideas?
+    Now we send mail with 5-B commits only.
+
+
+
+    Deleted branch (O..0):
+
+    We don't care about revisions in deleted branch. (or care?)
+
+
+    Update branch (O..N):
+
+
+    1 - 2 - O - 3 - 4 - N
+
+    Maill full log between O and N. (e.g. 3-N)  git rev-list O..N
+
+
+    1 - 2 - N                    1 - 2 - 3 - 4 - N
+            \\             or             \\
+              3 - 4 - O                     5 - 6 - O
+
+    It's mean user used --force option for pull and remove previosly revisions.
+    (rewind N revision in first case and replace 5-O revisions by 4-N)
+    We can check it by command: git rev-list N..O.
+    If result of this command not empty - we have such cases.
+    If result of "git merge-base O N" will be equal N  - we have first case.
+    We send mail with info about rewind or replace.
+    (Realization of this case in progress)
+
+
+------------
+Tag mail:
+
+    Add, delete and update tag:
+    If new(updated) tag is annotated - we write full info about it and target.
+    If it not annotated - only about commit.
+
+    For old(removed) tag - we write only sha of old commit/tag.
+
+
+------------
+Commit mail:
+    (Realization of this part in progress)

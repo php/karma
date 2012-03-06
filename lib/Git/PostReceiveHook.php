@@ -67,43 +67,6 @@ class PostReceiveHook extends ReceiveHook
 
     }
 
-    /*
-     * Note:
-     *   * - commits in push,
-     *   digits - simply commits
-     *   chars - branches
-     *   + - commits already in server git repository
-     *   without +  - commits in local git repository
-     *
-     * Situation #1.
-     *
-     *    1+ - 2* - A*
-     *          \
-     *          3* - B*
-     *
-     *  Problem: we have 0-B for B branch in push input data.
-     *  Solution: git rev-list B --not A   ->  3-B     (--not A C D E F ... all branches)
-     *
-     * Situation #2.
-     *    1 - 2 - A
-     *          \
-     *          3* - B*
-     *  Problem: we will have 0-B in rev-list.
-     *  Solution: ?
-     *
-     * Situation #3.
-     *
-     *  1+ - 2+  -   3+ - A+
-     *        \     /
-     *        4* - 5* - B*
-     * Problem: we will have 5-B in rev-list, but what about 4 commit?
-     *
-     * Solution: ?
-     *
-     *
-     * ... more problems
-     *
-     */
     private function sendBranchMail(array $branch)
     {
 
