@@ -82,7 +82,7 @@ class PostReceiveHook extends ReceiveHook
         if ($branch['changetype'] != self::TYPE_DELETED) {
 
             if ($branch['changetype'] == self::TYPE_UPDATED) {
-                // check if push was with --forced option
+                // check if push was with --force option
                 if ($replacedRevisions = $this->getRevisions($branch['new'] . '..' . $branch['old'])) {
                     $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n";
                 }

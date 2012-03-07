@@ -80,3 +80,30 @@ Tag mail:
 ------------
 Commit mail:
     (Realization of this part in progress)
+
+    1 - 2 - 3 - A (pushed, but not new branch)
+
+    5 - 2 - 6 - B (pushed, but not new branch)
+
+    3 - 5 - 7 - C (already on server)
+
+    We must check was every commit on repository before or not.
+    git rev-list --max-count=1 REV --not ALL BRANCHES EXCEPT PUSHED BRANCHES WITH THIS COMMIT
+    If result empty - this commit already was pushed in one of others repository.
+    Examples:
+    for 2 rev : we send mail
+    for 3 rev : we not send mail, because it already in C branch
+
+
+    1 - 2 - 3 - A (pushed)
+         \
+          4 - 5 - B (pushed, new)
+
+    6 - 7 - 8 - C (already on server)
+
+    We must mark 1 commit as commit in branches A and B.
+    If we didn't it and run "git rev-list --max-count=1 sha_for_1_commit --not B C" we get wrong result,
+    because commit 1 also in B branch.
+    For this we get "old" revision of every updated branch and check if it placed in every new branches.
+    If it is we mark all revisions between "old" of updated branch and "new" of new branch as revision also from new branch.
+    So we get this command "git rev-list --max-count=1 sha_for_1_commit --not C"
