@@ -49,14 +49,13 @@ class PostReceiveHook extends ReceiveHook
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_TAG) {
                 $this->sendTagMail($ref);
-            } else {
+            } elseif ($ref['reftype'] == self::REF_BRANCH){
                 $this->sendBranchMail($ref);
             }
         }
 
         // TODO: For new branches we must check if this branch was
         // cloned from other branch in this push - it's especial case
-        // TODO: check old post-receive for other especial cases
 
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
@@ -82,10 +81,15 @@ class PostReceiveHook extends ReceiveHook
 
         if ($branch['changetype'] != self::TYPE_DELETED) {
 
-            // TODO: cache revisions to $this->revisions
             if ($branch['changetype'] == self::TYPE_UPDATED) {
+                // check if push was with --forced option
+                if ($replacedRevisions = $this->getRevisions($branch['new'] . '..' . $branch['old'])) {
+                    $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n";
+                }
+
                 // git rev-list old..new
                 $revisions = $this->getRevisions($branch['old'] . '..' . $branch['new']);
+
             } else {
                 // for new branch we write log about new commits only
                 $revisions = $this->getRevisions($branch['new']. ' --not ' . implode(' ', $this->allBranches));
@@ -93,14 +97,16 @@ class PostReceiveHook extends ReceiveHook
 
             $this->cacheRevisions($branch['refname'], $revisions);
 
-            $message .= "--------LOG--------\n";
-            foreach ($revisions as $revision) {
-                $diff = $this->execute(
-                    'git diff-tree --stat --pretty=medium -c %s',
-                    $revision
-                );
+            if (count($revisions)) {
+                $message .= "--------LOG--------\n";
+                foreach ($revisions as $revision) {
+                    $diff = $this->execute(
+                        'git diff-tree --stat --pretty=medium -c %s',
+                        $revision
+                    );
 
-                $message .= $diff."\n\n";
+                    $message .= $diff."\n\n";
+                }
             }
         }
 

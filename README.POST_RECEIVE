@@ -63,10 +63,8 @@ This part contains info only about mail per branch. For mail per commit logic di
     It's mean user used --force option for pull and remove previosly revisions.
     (rewind N revision in first case and replace 5-O revisions by 4-N)
     We can check it by command: git rev-list N..O.
-    If result of this command not empty - we have such cases.
-    If result of "git merge-base O N" will be equal N  - we have first case.
-    We send mail with info about rewind or replace.
-    (Realization of this case in progress)
+    If result of this command not empty - we have such cases, and this
+    result is list of discarded revisions.
 
 
 ------------
