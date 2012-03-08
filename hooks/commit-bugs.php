@@ -13,7 +13,7 @@ $bug_url_prefixes = array(
     '' => 'https://bugs.php.net',
 );
 $bug_rpc_url = 'https://bugs.php.net/rpc.php';
-$viewvc_url_prefix = 'http://svn.php.net/viewvc/?view=revision&revision=';
+//$viewvc_url_prefix = 'http://svn.php.net/viewvc/?view=revision&revision=';
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Get the list of mentioned bugs from the commit log

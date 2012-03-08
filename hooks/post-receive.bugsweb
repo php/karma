@@ -1,0 +1,62 @@
+#!/usr/bin/env php
+<?php
+namespace Karma;
+
+const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
+const REPOSITORY_PATH = '/git/repositories';
+const LIB_PATH = '/git/checkout/karma/lib';
+
+set_include_path(
+    getenv('KARMA_LIB_PATH') ?: LIB_PATH .
+    PATH_SEPARATOR .
+    get_include_path());
+
+include 'Git.php';
+include 'Git/PushInformation.php';
+include 'Git/ReceiveHook.php';
+
+$hook = new \Git\ReceiveHook(KARMA_FILE, REPOSITORY_PATH);
+$rpath = $hook->getReceivedMessages();
+
+$template = "Automatic comment from GIT on behalf of %s
+Revision: http://git.php.net/%s
+Log: %s";
+
+foreach ($rpath as $commit) {
+    // should look like this: "[user@php.net] 0df3233344 Fixed bug #1234 It works!"
+    $pattern = '(\[([^\]]+)\] ([0-9a-f]+)(.*Fix(ed)? (bug )?\#([0-9]+)(.*)))i';
+    preg_match($pattern, $commit, $matches);
+
+    if (!isset($matches[1])) {
+        continue;
+    }
+
+    $committer  = $matches[1];
+    $commitHash = $matches[2];
+    $commitMsg  = trim($matches[3]);
+    $bugNumber  = $matches[6];
+    $shortMsg   = trim($matches[7]);
+    if ($shortMsg[0] == '(') {
+        $shortMsg = substr($shortMsg, 1);
+    }
+    if ($shortMsg[strlen($shortMsg)-1] == ')') {
+        $shortMsg = substr($shortMsg, 0, -1);
+    }
+
+    $output = sprintf(
+        $template,
+        $committer,
+        $commitHash,
+        $commitMsg
+    );
+
+    $commit_info = array();
+    $commit_info['log_message'] = $commitMsg;
+    $commit_info['author'] = $committer;
+    $viewvc_url_prefix = sprintf(
+        'http://git.php.net/?p=%s.git;a=commit;h=',
+        $hook->getRepositoryName()
+    );
+    $REV = $commitHash;
+    require __DIR__ . '/commit-bugs.php';
+}
