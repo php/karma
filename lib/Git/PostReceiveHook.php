@@ -6,22 +6,24 @@ class PostReceiveHook extends ReceiveHook
 
     private $pushAuthor = '';
     private $mailingList = '';
-    private $emailprefix = '';
+    private $emailPrefix = '';
 
 
     private $refs = array();
+    private $newBranches = array();
+    private $updatedBranches = array();
     private $revisions = array();
 
     private $allBranches = array();
 
 
-    public function __construct($basePath, $pushAuthor, $mailingList, $emailprefix)
+    public function __construct($basePath, $pushAuthor, $mailingList, $emailPrefix)
     {
         parent::__construct($basePath);
 
         $this->pushAuthor = $pushAuthor;
         $this->mailingList = $mailingList;
-        $this->emailprefix = $emailprefix;
+        $this->emailPrefix = $emailPrefix;
 
         $this->allBranches = $this->getAllBranches();
     }
@@ -45,6 +47,17 @@ class PostReceiveHook extends ReceiveHook
     {
         $this->refs = $this->hookInput();
 
+        //cache list of new and updated branches
+        foreach ($this->refs as $ref) {
+            if ($ref['reftype'] == self::REF_BRANCH){
+                if ($ref['changetype'] == self::TYPE_UPDATED) {
+                    $this->updatedBranches[] = $ref['refname'];
+                } elseif ($ref['changetype'] == self::TYPE_CREATED) {
+                    $this->newBranches[] = $ref['refname'];
+                }
+            }
+        }
+
         //send mails per ref push
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_TAG) {
@@ -53,9 +66,6 @@ class PostReceiveHook extends ReceiveHook
                 $this->sendBranchMail($ref);
             }
         }
-
-        // TODO: For new branches we must check if this branch was
-        // cloned from other branch in this push - it's especial case
 
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
@@ -92,7 +102,13 @@ class PostReceiveHook extends ReceiveHook
 
             } else {
                 // for new branch we write log about new commits only
-                $revisions = $this->getRevisions($branch['new']. ' --not ' . implode(' ', $this->allBranches));
+                $revisions = $this->getRevisions($branch['new']. ' --not ' . implode(' ', array_diff($this->allBranches, $this->newBranches)));
+
+                foreach ($this->updatedBranches as $refname) {
+                    if ($this->isRevExistsInBranches($this->refs[$refname]['old'], array($branch['refname']))) {
+                        $this->cacheRevisions($branch['refname'], $this->getRevisions($this->refs[$refname]['old'] . '..' . $branch['new']));
+                    }
+                }
             }
 
             $this->cacheRevisions($branch['refname'], $revisions);
@@ -110,7 +126,7 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
-        $this->mail($this->emailprefix . '[push] ' . $title , $message);
+        $this->mail($this->emailPrefix . '[push] ' . $title , $message);
     }
 
 
@@ -119,7 +135,7 @@ class PostReceiveHook extends ReceiveHook
         //TODO: add mail order from older commit to newer
         foreach ($revisions as $revision)
         {
-            $this->revisions[$revision][] = $branchName;
+            $this->revisions[$revision][$branchName] = $branchName;
         }
     }
 
@@ -150,7 +166,7 @@ class PostReceiveHook extends ReceiveHook
             $message .= "Old tag sha: \n" . $tag['old'];
         }
 
-        $this->mail($this->emailprefix . '[push] ' . $title , $message);
+        $this->mail($this->emailPrefix . '[push] ' . $title , $message);
     }
 
     private function getTagInfo($tag)
@@ -206,7 +222,7 @@ class PostReceiveHook extends ReceiveHook
 
         $message .= $diff ."\n\n";
 
-        $this->mail($this->emailprefix . '[commit] ' . $title , $message);
+        $this->mail($this->emailPrefix . '[commit] ' . $title , $message);
     }
 
 

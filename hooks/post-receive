@@ -4,7 +4,6 @@ namespace Karma;
 
 // STATUS: not worked
 // TODO: add license
-// TODO: mails per commit
 // TODO: refactor with lib/Git
 // TODO: documentation
 // TODO: refactor for PHP 5.4

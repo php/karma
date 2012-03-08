@@ -16,7 +16,7 @@ This part contains info only about mail per branch. For mail per commit logic di
          \
           3 - B (pushed)
 
-    We get all commits reachable from new branche and not from all other branches:
+    We get all commits reachable from new branch and not from all other NOT NEW branches:
         git rev-list B --not A   ->  3-B
 
 
@@ -40,6 +40,16 @@ This part contains info only about mail per branch. For mail per commit logic di
           5 - 6 - B (pushed)
     We can't know what we need also 3 commit in B mail...  any ideas?
     Now we send mail with 5-B commits only.
+
+
+    1 - 2 - 3 - A (already on server or pushed)
+         \
+          4 - 5 - B (pushed)
+               \
+                6 - C (pushed)
+
+    If we use git rev-list B --not A C  we skip 4-5 revisions in B.
+    So we use  git rev-list B --not A. See first situation in "New branch" section.
 
 
 

@@ -85,7 +85,7 @@ abstract class ReceiveHook
                 }
 
 
-                $parsed_input[] = $ref;
+                $parsed_input[$ref['refname']] = $ref;
             }
         }
         return $parsed_input;
