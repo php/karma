@@ -3,7 +3,6 @@ namespace Git;
 
 class ReceiveHook
 {
-    const GIT_EXECUTABLE = 'git';
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
     private $karmaFile;
@@ -22,7 +21,7 @@ class ReceiveHook
      */
     public function isKarmaIgnored()
     {
-        return 'true' === exec(sprintf('%s config karma.ignored', self::GIT_EXECUTABLE));
+        return 'true' === exec(sprintf('%s config karma.ignored', \Git::GIT_EXECUTABLE));
     }
 
     /**
@@ -35,7 +34,7 @@ class ReceiveHook
      */
     public function getRepositoryName()
     {
-        $rel_path = str_replace($this->repositoryBasePath, '', $this->getRepositoryPath());
+        $rel_path = str_replace($this->repositoryBasePath, '', \Git::getRepositoryPath());
         if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
             return $matches[1];
         }
@@ -43,22 +42,13 @@ class ReceiveHook
         return '';
     }
 
-    /**
-     * Returns the path to the current repository.
-     *
-     * Tries to determine the path of the current repository in which
-     * the hook was invoked.
-     *
-     * @return string
-     */
-    public function getRepositoryPath()
-    {
-        $path = exec(sprintf('%s rev-parse --git-dir', self::GIT_EXECUTABLE));
-        if (!is_dir($path)) {
-            return false;
+    public function mapInput(callable $fn) {
+        $result = [];
+        foreach($this->hookInput() as $input) {
+            $result[] = $fn($input['old'], $input['new']);
         }
 
-        return realpath($path);
+        return $result;
     }
 
     /**
@@ -109,26 +99,31 @@ class ReceiveHook
      */
     private function getReceivedPathsForRange($old, $new)
     {
-        $repourl = $this->getRepositoryPath();
+        $repourl = \Git::getRepositoryPath();
         $output  = [];
 
         /* there is the case where we push a new branch. check only new commits.
            in case its a brand new repo, no heads will be available. */
-        if ($old == '0000000000000000000000000000000000000000') {
+        if ($old == \Git::NULLREV) {
             exec(
                 sprintf("%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
-                    self::GIT_EXECUTABLE, $repourl), $output);
+                    \Git::GIT_EXECUTABLE, $repourl), $output);
             /* do we have heads? otherwise it's a new repo! */
-            $heads = implode(' ', $output);
-            $not   = count($output) > 0 ? sprintf('--not %s', escapeshellarg($heads)) : '';
+            if (count($output) > 0) {
+                $not = array_map(
+                    function($x) {
+                        return sprintf('--not %s', escapeshellarg($x));
+                    }, $output);
+                $not = implode(' ', $not);
+            }
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
-                self::GIT_EXECUTABLE, $repourl, $not,
+                \Git::GIT_EXECUTABLE, $repourl, $not,
                 escapeshellarg($new)), $output);
         } else {
             exec(
                 sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
-                self::GIT_EXECUTABLE, $repourl, escapeshellarg($old),
+                \Git::GIT_EXECUTABLE, $repourl, escapeshellarg($old),
                 escapeshellarg($new)), $output);
         }
         return $output;

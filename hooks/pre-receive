@@ -3,7 +3,7 @@
 /*
  * The PHP.net KARMA hook. For git repositories.
  *
- * (c) 2011 David Soria Parra <dsp at php dot net>
+ * (c) 2012 David Soria Parra <dsp at php dot net>
  *
  * Licensed under the terms of the MIT license.
  */
@@ -11,11 +11,15 @@ namespace Karma;
 
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 const REPOSITORY_PATH = '/git/repositories';
+const LIB_PATH = '/git/checkout/karma/lib';
 
-set_include_path('/git/checkout/karma/lib' .
+set_include_path(
+    getenv('KARMA_LIB_PATH') ?: LIB_PATH .
     PATH_SEPARATOR .
     get_include_path());
 
+include 'Git.php';
+include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 
 function deny($reason)
@@ -87,11 +91,11 @@ putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
 putenv("LC_ALL=en_US.UTF-8");
 
 $user = null;
-if (isset($_ENV['REMOTE_USER'])) {
-    $user = $_ENV['REMOTE_USER'];
-} else if (isset($_ENV['SSH_CONNECTION']) && isset($_ENV['GL_USER'])) {
+if (getenv('REMOTE_USER')) {
+    $user = getenv('REMOTE_USER');
+} else if (getenv('SSH_CONNECTION') && getenv('GL_USER')) {
     /* gitolite user */
-    $user = $_ENV['GL_USER'];
+    $user = getenv('GL_USER');
 }
 
 if (is_null($user)) {
@@ -107,16 +111,18 @@ if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
-$requested_paths = $hook->getReceivedPaths();
+$repo_name = $hook->getRepositoryName();
+$pi        = new \Git\PushInformation($hook);
+$req_paths = ($pi->isForced()) ? [''] : $hook->getReceivedPaths();
 
-if (empty($requested_paths)) {
+if (empty($req_paths)) {
     deny("We cannot figure out what you comitted!");
 }
 
-$prefix          = sprintf('%s/', $hook->getRepositoryName());
+$prefix          = sprintf('%s/', $repo_name);
 $avail_lines     = $hook->getKarmaFile();
-$requested_paths = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $requested_paths);
-$unavail_paths   = get_unavail_paths($user, $requested_paths, $avail_lines);
+$req_paths       = array_map(function ($x) use ($prefix) { return $prefix . $x;}, $req_paths);
+$unavail_paths   = get_unavail_paths($user, $req_paths, $avail_lines);
 
 if (!empty($unavail_paths)) {
     deny(sprintf(
