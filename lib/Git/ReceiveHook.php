@@ -13,10 +13,12 @@ abstract class ReceiveHook
     const REF_TAG = 1;
 
     private $repositoryName = '';
+    protected $repositoryPath = '';
 
     public function __construct($basePath)
     {
-        $rel_path = str_replace($basePath, '', \Git::getRepositoryPath());
+        $this->repositoryPath = \Git::getRepositoryPath();
+        $rel_path = str_replace($basePath, '', $this->repositoryPath);
         if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
             $this->repositoryName = $matches[1];
         }
@@ -48,16 +50,16 @@ abstract class ReceiveHook
      */
     public function hookInput()
     {
-        $parsed_input = array();
+        $parsed_input = [];
         while (!feof(STDIN)) {
             $line = fgets(STDIN);
             if (preg_match(self::INPUT_PATTERN, $line, $matches)) {
 
-                $ref = array(
+                $ref = [
                     'old'     => $matches[1],
                     'new'     => $matches[2],
                     'refname' => $matches[3]
-                );
+                ];
 
                 if (preg_match('~^refs/heads/.+$~', $ref['refname'])) {
                     // git push origin branchname

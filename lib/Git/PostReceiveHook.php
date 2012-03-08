@@ -9,14 +9,19 @@ class PostReceiveHook extends ReceiveHook
     private $emailPrefix = '';
 
 
-    private $refs = array();
-    private $newBranches = array();
-    private $updatedBranches = array();
-    private $revisions = array();
+    private $refs = [];
+    private $newBranches = [];
+    private $updatedBranches = [];
+    private $revisions = [];
 
-    private $allBranches = array();
+    private $allBranches = [];
 
-
+    /**
+     * @param $basePath string
+     * @param $pushAuthor string
+     * @param $mailingList string
+     * @param $emailPrefix string
+     */
     public function __construct($basePath, $pushAuthor, $mailingList, $emailPrefix)
     {
         parent::__construct($basePath);
@@ -28,14 +33,13 @@ class PostReceiveHook extends ReceiveHook
         $this->allBranches = $this->getAllBranches();
     }
 
-    private function getAllBranches()
+    /**
+     * @param $cmd string
+     * @return string
+     */
+    private function gitExecute($cmd)
     {
-        return explode("\n", $this->execute('git for-each-ref --format="%%(refname)" "refs/heads/*"'));
-    }
-
-
-    private function execute($cmd)
-    {
+        $cmd = \Git::GIT_EXECUTABLE . " --git-dir=" . $this->repositoryPath . " " . $cmd;
         $args = func_get_args();
         array_shift($args);
         $cmd = vsprintf($cmd, $args);
@@ -43,6 +47,17 @@ class PostReceiveHook extends ReceiveHook
         return $output;
     }
 
+    /**
+     * @return array
+     */
+    private function getAllBranches()
+    {
+        return explode("\n", $this->gitExecute('for-each-ref --format="%%(refname)" "refs/heads/*"'));
+    }
+
+    /**
+     *
+     */
     public function process()
     {
         $this->refs = $this->hookInput();
@@ -76,6 +91,9 @@ class PostReceiveHook extends ReceiveHook
 
     }
 
+    /**
+     * @param array $branch
+     */
     private function sendBranchMail(array $branch)
     {
 
@@ -105,7 +123,7 @@ class PostReceiveHook extends ReceiveHook
                 $revisions = $this->getRevisions($branch['new']. ' --not ' . implode(' ', array_diff($this->allBranches, $this->newBranches)));
 
                 foreach ($this->updatedBranches as $refname) {
-                    if ($this->isRevExistsInBranches($this->refs[$refname]['old'], array($branch['refname']))) {
+                    if ($this->isRevExistsInBranches($this->refs[$refname]['old'],[$branch['refname']])) {
                         $this->cacheRevisions($branch['refname'], $this->getRevisions($this->refs[$refname]['old'] . '..' . $branch['new']));
                     }
                 }
@@ -116,8 +134,8 @@ class PostReceiveHook extends ReceiveHook
             if (count($revisions)) {
                 $message .= "--------LOG--------\n";
                 foreach ($revisions as $revision) {
-                    $diff = $this->execute(
-                        'git diff-tree --stat --pretty=medium -c %s',
+                    $diff = $this->gitExecute(
+                        'diff-tree --stat --pretty=medium -c %s',
                         $revision
                     );
 
@@ -130,6 +148,10 @@ class PostReceiveHook extends ReceiveHook
     }
 
 
+    /**
+     * @param $branchName string
+     * @param array $revisions
+     */
     private function cacheRevisions($branchName, array $revisions)
     {
         //TODO: add mail order from older commit to newer
@@ -140,6 +162,9 @@ class PostReceiveHook extends ReceiveHook
     }
 
 
+    /**
+     * @param array $tag
+     */
     private function sendTagMail(array $tag)
     {
 
@@ -169,75 +194,100 @@ class PostReceiveHook extends ReceiveHook
         $this->mail($this->emailPrefix . '[push] ' . $title , $message);
     }
 
+    /**
+     * @param $tag string
+     * @return string
+     */
     private function getTagInfo($tag)
     {
         $info = "Target:\n";
-        $info .= $this->execute('git diff-tree --stat --pretty=medium -c %s', $tag);
+        $info .= $this->gitExecute('diff-tree --stat --pretty=medium -c %s', $tag);
         return $info;
     }
 
+    /**
+     * @param $tag string
+     * @return string
+     */
     private function getAnnotatedTagInfo($tag)
     {
-        $tagInfo = $this->execute('git for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', $tag);
+        $tagInfo = $this->gitExecute('for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', $tag);
         list($target, $tagger, $taggerdate) = explode(' ', $tagInfo);
 
         $info = "Tagger: " . $tagger . "\n";
         $info .= "Date: " . $taggerdate . "\n";
-        $info .= $this->execute("git cat-file tag %s | sed -e '1,/^$/d'", $tag)."\n";
+        $info .= $this->gitExecute("cat-file tag %s | sed -e '1,/^$/d'", $tag)."\n";
         $info .= "Target:\n";
-        $info .= $this->execute('git diff-tree --stat --pretty=medium -c %s', $target);
+        $info .= $this->gitExecute('diff-tree --stat --pretty=medium -c %s', $target);
         return $info;
     }
 
+    /**
+     * @param $rev string
+     * @return bool
+     */
     private function isAnnotatedTag($rev)
     {
-        return trim($this->execute('git for-each-ref --format="%%(objecttype)" %s', $rev)) == 'tag';
+        return trim($this->gitExecute('for-each-ref --format="%%(objecttype)" %s', $rev)) == 'tag';
     }
 
-
+    /**
+     * @param $revRange string
+     * @return array
+     */
     private function getRevisions($revRange)
     {
-        $output = $this->execute(
-            'git rev-list %s',
+        $output = $this->gitExecute(
+            'rev-list %s',
             $revRange
         );
-        $revisions = $output ? explode("\n", trim($output)) : array();
+        $revisions = $output ? explode("\n", trim($output)) : [];
         return $revisions;
     }
 
 
+    /**
+     * @param $revision string
+     */
     private function sendCommitMail($revision)
     {
         $title = "Commit " . $revision . " was added";
         $message = $title . "\n\n";
 
 
-        $info = $this->execute('git diff-tree --stat --pretty=fuller -c %s', $revision);
+        $info = $this->gitExecute('diff-tree --stat --pretty=fuller -c %s', $revision);
 
         $message .= $info ."\n\n";
 
         $message .= "--------DIFF--------\n";
 
-        $diff = $this->execute('git diff-tree -c -p %s', $revision);
+        $diff = $this->gitExecute('diff-tree -c -p %s', $revision);
 
         $message .= $diff ."\n\n";
 
         $this->mail($this->emailPrefix . '[commit] ' . $title , $message);
     }
 
-
+    /**
+     * @param $subject string
+     * @param $message string
+     */
     private function mail($subject, $message) {
-        $headers = array(
+        $headers = [
             'From: ' . $this->pushAuthor . '@php.net',
             'Reply-To: ' . $this->pushAuthor . '@php.net'
-        );
+        ];
 
         mail($this->mailingList, $subject, $message, implode("\r\n", $headers));
     }
 
-
+    /**
+     * @param $revision string
+     * @param array $branches
+     * @return bool
+     */
     private function isRevExistsInBranches($revision, array $branches) {
-        return !(bool) $this->execute('git rev-list --max-count=1 %s --not %s', $revision, implode(' ', $branches));
+        return !(bool) $this->gitExecute('rev-list --max-count=1 %s --not %s', $revision, implode(' ', $branches));
     }
 
 }
