@@ -139,7 +139,7 @@ class ReceiveHook
      */
     private function getReceivedMessagesForRange($old, $new)
     {
-        $repourl = $this->getRepositoryPath();
+        $repourl = \Git::getRepositoryPath();
         $output = [];
 
         if ($old == '0000000000000000000000000000000000000000') {
@@ -155,7 +155,7 @@ class ReceiveHook
             $not   = count($output) > 0 ? sprintf('--not %s', escapeshellarg($heads)) : '';
             $cmd   = sprintf(
                 '%s --git-dir=%s log --pretty=format:"[%%ae] %%H %%s" %s %s',
-                self::GIT_EXECUTABLE,
+                \Git::GIT_EXECUTABLE,
                 $repourl,
                 $not,
                 escapeshellarg($new)
@@ -164,7 +164,7 @@ class ReceiveHook
         } else {
             $cmd = sprintf(
                 '%s --git-dir=%s log --pretty=format:"[%%ae] %%H %%s" %s..%s',
-                self::GIT_EXECUTABLE,
+                \Git::GIT_EXECUTABLE,
                 $repourl,
                 escapeshellarg($old),
                 escapeshellarg($new)
