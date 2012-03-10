@@ -10,6 +10,7 @@ namespace Karma;
 // TODO: reformat mails
 // TODO: check mail length
 
+// /git/users.db
 
 error_reporting(E_ALL | E_STRICT);
 date_default_timezone_set('UTC');
@@ -23,6 +24,7 @@ set_include_path('/git/checkout/karma/lib' .
     PATH_SEPARATOR .
     get_include_path());
 
+include 'Mail.php';
 include 'Git.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PostReceiveHook.php';
