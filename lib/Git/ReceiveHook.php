@@ -25,6 +25,33 @@ abstract class ReceiveHook
     }
 
     /**
+     * Run git shell command and return result
+     *
+     * @param $cmd string
+     * @return string
+     */
+    protected function gitExecute($cmd)
+    {
+        $cmd = \Git::GIT_EXECUTABLE . " --git-dir=" . $this->repositoryPath . " " . $cmd;
+        $args = func_get_args();
+        array_shift($args);
+        $cmd = vsprintf($cmd, $args);
+        $output = shell_exec($cmd);
+        return $output;
+    }
+
+    /**
+     * Escape array items by escapeshellarg function
+     * @param $args
+     * @return array array with escaped items
+     */
+    protected function escapeArrayShellArgs($args)
+    {
+        return array_map('escapeshellarg', $args);
+    }
+
+
+    /**
      * Returns the repository name.
      *
      * A repository name is the path to the repository without the .git.
@@ -38,14 +65,47 @@ abstract class ReceiveHook
     }
 
     /**
+     * Return array with changed paths as keys and change type as values
+     * If commit is merge commit change type will have more than one char
+     * (for example "MM")
+     * @param $revRange
+     * @return array
+     */
+    protected function getChangedPaths($revRange)
+    {
+        $raw = $this->gitExecute('show --name-status --pretty="format:" %s', $revRange);
+        $paths = [];
+        if (preg_match_all('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $raw , $matches,  PREG_SET_ORDER)) {
+            foreach($matches as $item) {
+                $paths[$item[2]] = $item[1];
+            }
+        }
+        return $paths;
+    }
+
+
+    /**
+     * Return array with branches names in repository
+     *
+     * @return array
+     */
+    protected function getAllBranches()
+    {
+        $branches = explode("\n", $this->gitExecute('for-each-ref --format="%%(refname)" "refs/heads/*"'));
+        if ($branches[0] == '') $branches = [];
+        return $branches;
+    }
+
+
+    /**
      * Parses the input from git.
      *
      * Git pipes a list of oldrev, newrev and revname combinations
      * to the hook. We parse this input. For more information about
      * the input see githooks(5).
      *
-     * Returns an array with 'old', 'new', 'refname' keys for each ref that
-     * will be updated.
+     * Returns an array with 'old', 'new', 'refname', 'changetype', 'reftype'
+     * keys for each ref that will be updated.
      * @return array
      */
     public function hookInput()

@@ -34,28 +34,6 @@ class PostReceiveHook extends ReceiveHook
     }
 
     /**
-     * @param $cmd string
-     * @return string
-     */
-    private function gitExecute($cmd)
-    {
-        $cmd = \Git::GIT_EXECUTABLE . " --git-dir=" . $this->repositoryPath . " " . $cmd;
-        $args = func_get_args();
-        array_shift($args);
-        $cmd = vsprintf($cmd, $args);
-        $output = shell_exec($cmd);
-        return $output;
-    }
-
-    /**
-     * @return array
-     */
-    private function getAllBranches()
-    {
-        return explode("\n", $this->gitExecute('for-each-ref --format="%%(refname)" "refs/heads/*"'));
-    }
-
-    /**
      *
      */
     public function process()
@@ -269,24 +247,14 @@ class PostReceiveHook extends ReceiveHook
         ];
     }
 
-    private function getCommitChangedPaths($revision)
-    {
-        $raw = $this->gitExecute('show --name-status --pretty="format:" %s', $revision);
-        $paths = [];
-        if (preg_match_all('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $raw , $matches,  PREG_SET_ORDER)) {
-            foreach($matches as $item) {
-                $paths[$item[2]] = $item[1];
-            }
-        }
-        return $paths;
-    }
-
     /**
      * Send mail about commit.
      * Subject: [git] [commit] %PROJECT% %PATHS%
      * Body:
+     * Commit: %SHA%
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     * Parents: %SHA_PARENTS%
      *
      * Commit: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
      *
@@ -311,7 +279,7 @@ class PostReceiveHook extends ReceiveHook
     {
 
         $info = $this->getCommitInfo($revision);
-        $paths = $this->getCommitChangedPaths($revision);
+        $paths = $this->getChangedPaths($revision);
         $pathsString = '';
         foreach ($paths as $path => $action)
         {
@@ -335,27 +303,35 @@ class PostReceiveHook extends ReceiveHook
 
 
         if (strlen($pathsString) < 8192) {
+            // inline changed paths
             $message .= "Changed paths:\n" . $pathsString . "\n";
             if ((strlen($pathsString) + strlen($diff)) < 8192) {
+                // inline diff
                 $message .= "Diff:\n" . $diff . "\n";
             } else {
+                // diff attach
                 $diffFile = 'diff_' . $revision . '.txt';
                 $mail->addTextFile($diffFile, $diff);
                 if ((strlen($message) + $mail->getFileLength($diffFile)) > 262144) {
+                    // diff attach exceeded max size
                     $mail->dropFile($diffFile);
                     $message .= 'Diff: <Diff exceeded maximum size>';
                 }
             }
         } else {
+            // changed paths attach
             $pathsFile = 'paths_' . $revision . '.txt';
             $mail->addTextFile($pathsFile, $pathsString);
             if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
+                // changed paths attach exceeded max size
                 $mail->dropFile($pathsFile);
                 $message .= 'Changed paths: <changed paths exceeded maximum size>';
             } else {
+                // diff attach
                 $diffFile = 'diff_' . $revision . '.txt';
                 $mail->addTextFile($diffFile, $diff);
                 if ((strlen($message) + $mail->getFileLength($pathsFile) + $mail->getFileLength($diffFile)) > 262144) {
+                    // diff attach exceeded max size
                     $mail->dropFile($diffFile);
                 }
             }
