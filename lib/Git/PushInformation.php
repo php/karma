@@ -14,6 +14,7 @@ class PushInformation
     public function __construct(ReceiveHook $hook)
     {
         $this->repourl = \Git::getRepositoryPath();
+        $this->hook    = $hook;
     }
 
     /**
@@ -27,10 +28,10 @@ class PushInformation
     protected function mergeBase($oldrev, $newrev)
     {
         $baserev = exec(sprintf('%s --git-dir=%s merge-base %s %s',
-                        self::GIT_EXECUTABLE,
+                        \Git::GIT_EXECUTABLE,
                         $this->repourl,
                         escapeshellarg($oldrev),
-                        escapeshellarg($newrev)), $retval);
+                        escapeshellarg($newrev)), $output, $retval);
 
         $baserev = trim($baserev);
 
@@ -74,6 +75,8 @@ class PushInformation
             function($oldrev, $newrev) {
                 if ($oldrev == \Git::NULLREV) {
                     return false;
+                } else if ($newrev == \Git::NULLREV) {
+                    return true;
                 }
                 return $newrev == $this->mergeBase($oldrev, $newrev);
             });

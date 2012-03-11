@@ -11,11 +11,15 @@ namespace Karma;
 
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 const REPOSITORY_PATH = '/git/repositories';
+const LIB_PATH = '/git/checkout/karma/lib';
 
-set_include_path('/git/checkout/karma/lib' .
+set_include_path(
+    getenv('KARMA_LIB_PATH') ?: LIB_PATH .
     PATH_SEPARATOR .
     get_include_path());
 
+include 'Git.php';
+include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
@@ -108,9 +112,9 @@ if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
-$repo_name  = $hook->getRepositoryName();
+$repo_name = $hook->getRepositoryName();
 $pi        = new \Git\PushInformation($hook);
-$req_paths = ($pi->isForced()) ? [''] : $req_paths;
+$req_paths = ($pi->isForced()) ? [''] : $hook->getReceivedPaths();
 
 if (empty($req_paths)) {
     deny("We cannot figure out what you comitted!");
