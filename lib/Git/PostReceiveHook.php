@@ -92,20 +92,22 @@ class PostReceiveHook extends ReceiveHook
 
             if ($changeType == self::TYPE_UPDATED) {
                 // check if push was with --force option
-                if ($replacedRevisions = $this->getRevisions($newrev . '..' . $oldrev)) {
+                if ($replacedRevisions = $this->getRevisions(escapeshellarg($newrev . '..' . $oldrev))) {
                     $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n";
                 }
 
                 // git rev-list old..new
-                $revisions = $this->getRevisions($oldrev . '..' . $newrev);
+                $revisions = $this->getRevisions(escapeshellarg($oldrev . '..' . $newrev));
 
             } else {
                 // for new branch we write log about new commits only
-                $revisions = $this->getRevisions($newrev. ' --not ' . implode(' ', array_diff($this->allBranches, $this->newBranches)));
+                $revisions = $this->getRevisions(
+                    escapeshellarg($newrev) . ' --not ' . implode(' ', $this->escapeArrayShellArgs(array_diff($this->allBranches, $this->newBranches)))
+                );
 
                 foreach ($this->updatedBranches as $refname) {
                     if ($this->isRevExistsInBranches($this->refs[$refname]['old'], [$name])) {
-                        $this->cacheRevisions($name, $this->getRevisions($this->refs[$refname]['old'] . '..' . $newrev));
+                        $this->cacheRevisions($name, $this->getRevisions(escapeshellarg($this->refs[$refname]['old'] . '..' . $newrev)));
                     }
                 }
             }
@@ -115,9 +117,9 @@ class PostReceiveHook extends ReceiveHook
             if (count($revisions)) {
                 $message .= "--------LOG--------\n";
                 foreach ($revisions as $revision) {
-                    $diff = $this->gitExecute(
+                    $diff = \Git::gitExec(
                         'diff-tree --stat --pretty=medium -c %s',
-                        $revision
+                        escapeshellarg($revision)
                     );
 
                     $message .= $diff."\n\n";
@@ -185,7 +187,7 @@ class PostReceiveHook extends ReceiveHook
     private function getTagInfo($tag)
     {
         $info = "Target:\n";
-        $info .= $this->gitExecute('diff-tree --stat --pretty=medium -c %s', $tag);
+        $info .= \Git::gitExec('diff-tree --stat --pretty=medium -c %s', escapeshellarg($tag));
         return $info;
     }
 
@@ -195,14 +197,14 @@ class PostReceiveHook extends ReceiveHook
      */
     private function getAnnotatedTagInfo($tag)
     {
-        $tagInfo = $this->gitExecute('for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', $tag);
-        list($target, $tagger, $taggerdate) = explode(' ', $tagInfo);
+        $tagInfo = \Git::gitExec('for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', escapeshellarg($tag));
+        list($target, $tagger, $taggerDate) = explode(' ', $tagInfo);
 
         $info = "Tagger: " . $tagger . "\n";
-        $info .= "Date: " . $taggerdate . "\n";
-        $info .= $this->gitExecute("cat-file tag %s | sed -e '1,/^$/d'", $tag)."\n";
+        $info .= "Date: " . $taggerDate . "\n";
+        $info .= \Git::gitExec("cat-file tag %s | sed -e '1,/^$/d'", escapeshellarg($tag))."\n";
         $info .= "Target:\n";
-        $info .= $this->gitExecute('diff-tree --stat --pretty=medium -c %s', $target);
+        $info .= \Git::gitExec('diff-tree --stat --pretty=medium -c %s', escapeshellarg($target));
         return $info;
     }
 
@@ -212,16 +214,20 @@ class PostReceiveHook extends ReceiveHook
      */
     private function isAnnotatedTag($rev)
     {
-        return trim($this->gitExecute('for-each-ref --format="%%(objecttype)" %s', $rev)) == 'tag';
+        return trim(\Git::gitExec('for-each-ref --format="%%(objecttype)" %s', escapeshellarg($rev))) == 'tag';
     }
 
     /**
-     * @param $revRange string
+     * Get list of revisions for $revRange
+     *
+     * Required already escaped string in $revRange!!!
+     *
+     * @param $revRange string A..B or A ^B C --not D   etc.
      * @return array
      */
     private function getRevisions($revRange)
     {
-        $output = $this->gitExecute(
+        $output = \Git::gitExec(
             'rev-list %s',
             $revRange
         );
@@ -233,7 +239,7 @@ class PostReceiveHook extends ReceiveHook
 
     private function getCommitInfo($revision)
     {
-        $raw = $this->gitExecute('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%B" %s', $revision);
+        $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%B" %s', escapeshellarg($revision));
         $raw = explode("\n", $raw, 9); //8 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
         return [
             'parents'           => $raw[1],  // %P
@@ -279,13 +285,13 @@ class PostReceiveHook extends ReceiveHook
     {
 
         $info = $this->getCommitInfo($revision);
-        $paths = $this->getChangedPaths($revision);
+        $paths = $this->getChangedPaths(escapeshellarg($revision));
         $pathsString = '';
         foreach ($paths as $path => $action)
         {
             $pathsString .= '  ' . $action . '  ' . $path . "\n";
         }
-        $diff =  $this->gitExecute('diff-tree -c -p %s', $revision);
+        $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
 
         $mail = new \Mail();
         $mail->setSubject($this->emailPrefix . '[commit] ' . $this->getRepositoryName() . ' ' . implode(' ', array_keys($paths)));
@@ -364,7 +370,7 @@ class PostReceiveHook extends ReceiveHook
      * @return bool
      */
     private function isRevExistsInBranches($revision, array $branches) {
-        return !(bool) $this->gitExecute('rev-list --max-count=1 %s --not %s', $revision, implode(' ', $branches));
+        return !(bool) \Git::gitExec('rev-list --max-count=1 %s --not %s', escapeshellarg($revision), implode(' ', $this->escapeArrayShellArgs($branches)));
     }
 
 }

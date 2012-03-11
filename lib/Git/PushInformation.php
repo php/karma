@@ -3,17 +3,11 @@ namespace Git;
 
 class PushInformation
 {
-    const GIT_EXECUTABLE = 'git';
-
-    private $karmaFile;
-    private $repositoryBasePath;
 
     private $hook    = null;
-    private $repourl = null;
 
     public function __construct(ReceiveHook $hook)
     {
-        $this->repourl = \Git::getRepositoryPath();
         $this->hook    = $hook;
     }
 
@@ -27,17 +21,10 @@ class PushInformation
      */
     protected function mergeBase($oldrev, $newrev)
     {
-        $baserev = exec(sprintf('%s --git-dir=%s merge-base %s %s',
-                        \Git::GIT_EXECUTABLE,
-                        $this->repourl,
-                        escapeshellarg($oldrev),
-                        escapeshellarg($newrev)), $output, $retval);
+        $baserev = \Git::gitExec('merge-base %s %s', escapeshellarg($oldrev), escapeshellarg($newrev));
 
         $baserev = trim($baserev);
 
-        if (0 !== $retval) {
-            throw new \Exception('Failed to call git');
-        }
 
         if (40 != strlen($baserev)) {
             return false;

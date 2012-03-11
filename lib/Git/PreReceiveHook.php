@@ -19,7 +19,7 @@ class PreReceiveHook extends ReceiveHook
     */
     public function isKarmaIgnored()
     {
-        return 'true' === exec(sprintf('%s config karma.ignored', \Git::GIT_EXECUTABLE));
+        return 'true' === \Git::gitExec('%s config karma.ignored');
     }
 
     public function mapInput(callable $fn) {
@@ -68,7 +68,7 @@ class PreReceiveHook extends ReceiveHook
            $parsed_input);
 
         /* flattern the array */
-        $flattend = array_reduce($paths, 'array_merge', []);
+        $paths = array_reduce($paths, 'array_merge', []);
 
 
         return array_unique($paths);

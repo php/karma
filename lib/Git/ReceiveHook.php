@@ -13,31 +13,13 @@ abstract class ReceiveHook
     const REF_TAG = 1;
 
     private $repositoryName = '';
-    protected $repositoryPath = '';
 
     public function __construct($basePath)
     {
-        $this->repositoryPath = \Git::getRepositoryPath();
-        $rel_path = str_replace($basePath, '', $this->repositoryPath);
+        $rel_path = str_replace($basePath, '', \Git::getRepositoryPath());
         if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
             $this->repositoryName = $matches[1];
         }
-    }
-
-    /**
-     * Run git shell command and return result
-     *
-     * @param $cmd string
-     * @return string
-     */
-    protected function gitExecute($cmd)
-    {
-        $cmd = \Git::GIT_EXECUTABLE . " --git-dir=" . $this->repositoryPath . " " . $cmd;
-        $args = func_get_args();
-        array_shift($args);
-        $cmd = vsprintf($cmd, $args);
-        $output = shell_exec($cmd);
-        return $output;
     }
 
     /**
@@ -68,12 +50,15 @@ abstract class ReceiveHook
      * Return array with changed paths as keys and change type as values
      * If commit is merge commit change type will have more than one char
      * (for example "MM")
+     *
+     * Required already escaped string in $revRange!!!
+     *
      * @param $revRange
      * @return array
      */
     protected function getChangedPaths($revRange)
     {
-        $raw = $this->gitExecute('show --name-status --pretty="format:" %s', $revRange);
+        $raw = \Git::gitExec('show --name-status --pretty="format:" %s', $revRange);
         $paths = [];
         if (preg_match_all('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $raw , $matches,  PREG_SET_ORDER)) {
             foreach($matches as $item) {
@@ -91,7 +76,7 @@ abstract class ReceiveHook
      */
     protected function getAllBranches()
     {
-        $branches = explode("\n", $this->gitExecute('for-each-ref --format="%%(refname)" "refs/heads/*"'));
+        $branches = explode("\n", \Git::gitExec('for-each-ref --format="%%(refname)" "refs/heads/*"'));
         if ($branches[0] == '') $branches = [];
         return $branches;
     }
