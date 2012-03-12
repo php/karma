@@ -8,8 +8,6 @@ class PostReceiveHook extends ReceiveHook
     private $mailingList = '';
     private $emailPrefix = '';
 
-
-    private $refs = [];
     private $newBranches = [];
     private $updatedBranches = [];
     private $revisions = [];
@@ -38,7 +36,7 @@ class PostReceiveHook extends ReceiveHook
      */
     public function process()
     {
-        $this->refs = $this->hookInput();
+        $this->hookInput();
 
         //cache list of new and updated branches
         foreach ($this->refs as $ref) {
@@ -70,6 +68,37 @@ class PostReceiveHook extends ReceiveHook
     }
 
     /**
+     * Send mail about branch.
+     * Subject: [git] [branch] %STATUS% branch %BRANCH_NAME% in %PROJECT%
+     * Body:
+     * Branch %BRANCH_NAME% in %PROJECT% was %STATUS%
+     * Date: Thu, 08 Mar 2012 12:39:48 +0000(current mail date)
+     *
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=shortlog;h=refs/heads/%BRANCH_NAME%
+     *
+     * --part1--
+     * Log:
+     *
+     * --per commit--
+     * Commit: %SHA%
+     * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
+     * Shortlog: %SHORT_MESSAGE%
+     * --/per commit--
+     *
+     * --/part1--
+     *
+     * (if part1 exceeded maximum size)
+     * --part1--
+     * Commits:
+     *
+     * --per commit--
+     * Commit: %SHA%
+     * --/per commit--
+     *
+     * --/part1--
+     *
      * @param $name string
      * @param $changeType int
      * @param $oldrev string
@@ -77,6 +106,7 @@ class PostReceiveHook extends ReceiveHook
      */
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
+        // FIXME: work in progress
 
         if ($changeType == self::TYPE_UPDATED) {
             $title = "Branch " . $name . " was updated";
@@ -146,6 +176,31 @@ class PostReceiveHook extends ReceiveHook
 
 
     /**
+     * Send mail about tag.
+     * Subject: [git] [tag] %STATUS% tag %TAGNAME% in %PROJECT%
+     * Body:
+     * Tag %TAGNAME% in %PROJECT% was %STATUS% (if sha was changed)from %OLD_SHA%
+     * Tag(if annotaded): %SHA%
+     * Tagger(if annotaded): %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     *
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=tag;h=%SHA%
+     *
+     * Log(if annotaded):
+     * %MESSAGE%
+     *
+     * Target: %SHA%
+     * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     * Parents: %SHA_PARENTS%
+     * Target link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
+     * Target log:
+     * %MESSAGE%
+     *
+     * --part1--
+     * Changed paths:
+     * %PATHS%
+     * --/part1--
+     *
      * @param $name string
      * @param $changetype int
      * @param $oldrev string
@@ -153,7 +208,7 @@ class PostReceiveHook extends ReceiveHook
      */
     private function sendTagMail($name, $changetype, $oldrev, $newrev)
     {
-
+        // FIXME: work in progress
         if ($changetype == self::TYPE_UPDATED) {
             $title = "Tag " . $name . " was updated";
         } elseif ($changetype == self::TYPE_CREATED) {
@@ -262,7 +317,7 @@ class PostReceiveHook extends ReceiveHook
      * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Parents: %SHA_PARENTS%
      *
-     * Commit: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
      *
      * Log:
      * %MESSAGE%

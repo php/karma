@@ -24,7 +24,7 @@ class PreReceiveHook extends ReceiveHook
 
     public function mapInput(callable $fn) {
         $result = [];
-        foreach($this->hookInput() as $input) {
+        foreach($this->refs as $input) {
             $result[] = $fn($input['old'], $input['new']);
         }
 
@@ -45,8 +45,6 @@ class PreReceiveHook extends ReceiveHook
 
     public function getReceivedPaths()
     {
-        $parsed_input = $this->hookInput();
-
         // escaped branches
         $allBranches =$this->escapeArrayShellArgs($this->getAllBranches());
 
@@ -65,7 +63,8 @@ class PreReceiveHook extends ReceiveHook
 
                 return array_keys($paths);
             },
-           $parsed_input);
+            $this->refs
+        );
 
         /* flattern the array */
         $paths = array_reduce($paths, 'array_merge', []);

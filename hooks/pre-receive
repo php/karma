@@ -112,6 +112,7 @@ if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
+$hook->hookInput();
 $repo_name = $hook->getRepositoryName();
 $pi        = new \Git\PushInformation($hook);
 $req_paths = ($pi->isForced()) ? [''] : $hook->getReceivedPaths();

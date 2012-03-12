@@ -13,6 +13,7 @@ abstract class ReceiveHook
     const REF_TAG = 1;
 
     private $repositoryName = '';
+    protected $refs = [];
 
     public function __construct($basePath)
     {
@@ -135,6 +136,6 @@ abstract class ReceiveHook
                 $parsed_input[$ref['refname']] = $ref;
             }
         }
-        return $parsed_input;
+        $this->refs = $parsed_input;
     }
 }
