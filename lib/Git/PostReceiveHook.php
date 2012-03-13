@@ -177,16 +177,16 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Send mail about tag.
-     * Subject: [git] [tag] %STATUS% tag %TAGNAME% in %PROJECT%
+     * Subject: [git] [tag] %PROJECT%: %STATUS% tag %TAGNAME%
      * Body:
      * Tag %TAGNAME% in %PROJECT% was %STATUS% (if sha was changed)from %OLD_SHA%
      * Tag(if annotaded): %SHA%
      * Tagger(if annotaded): %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      *
-     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=tag;h=%SHA%
-     *
      * Log(if annotaded):
      * %MESSAGE%
+     *
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=tag;h=%SHA%
      *
      * Target: %SHA%
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
@@ -208,31 +208,63 @@ class PostReceiveHook extends ReceiveHook
      */
     private function sendTagMail($name, $changetype, $oldrev, $newrev)
     {
-        // FIXME: work in progress
-        if ($changetype == self::TYPE_UPDATED) {
-            $title = "Tag " . $name . " was updated";
-        } elseif ($changetype == self::TYPE_CREATED) {
-            $title = "Tag " . $name . " was created";
-        } else {
-            $title = "Tag " . $name . " was deleted";
-        }
 
-        $message = $title . "\n\n";
+        $status = [self::TYPE_UPDATED => 'Update', self::TYPE_CREATED => 'Create', => self::TYPE_DELETED => 'Delete'];
+        $shortname = str_replace('refs/tags/', '', $name);
+        $mail = new \Mail();
+        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changetype] . ' tag ' . $shortname;
+
+        $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changetype] . 'd' .
+            (($changetype == self::TYPE_DELETED) ? ' from ' . $oldrev : '' ) . "\n";
 
         if ($changetype != self::TYPE_DELETED) {
-            $message .= "Tag info:\n";
-            $isAnnotatedNewTag = $this->isAnnotatedTag($name);
-            if ($isAnnotatedNewTag) {
-                $message .= $this->getAnnotatedTagInfo($name) ."\n";
+            $info = $this->getTagInfo($name);
+            $targetInfo = $this->getCommitInfo($info['target']);
+            $targetPaths = $this->getChangedPaths(escapeshellarg($info['target']));
+            $pathsString = '';
+            foreach ($targetPaths as $path => $action)
+            {
+                $pathsString .= '  ' . $action . '  ' . $path . "\n";
+            }
+
+            if ($info['annotated']) {
+                $message .= 'Tag: ' . $info['revision'] . "\n";
+                $message .= 'Tagger: ' . $info['tagger'] . '(' . $info['tagger_email'] . ')         ' . $info['tagger_date'] . "\n";
+            }
+
+            $message .= "\n";
+            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;;a=tag;h=" . $info['revision'] . "\n";
+            $message .= "\n";
+
+            $message .= 'Target: ' . $info['target'] . "\n";
+            $message .= 'Author: ' . $targetInfo['author'] . '(' . $targetInfo['author_email'] . ')         ' . $targetInfo['author_date'] . "\n";
+            $message .= 'Committer: ' . $targetInfo['committer'] . '(' . $targetInfo['committer_email'] . ')      ' . $targetInfo['committer_date'] . "\n";
+            if ($targetInfo['parents']) $message .= 'Parents: ' . $targetInfo['parents'] . "\n";
+            $message .= "Target link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $info['target'] . "\n";
+            $message .= "Target log:\n" . $targetInfo['log'] . "\n";
+
+
+            if (strlen($pathsString) < 8192) {
+                // inline changed paths
+                $message .= "Changed paths:\n" . $pathsString . "\n";
             } else {
-                $message .= $this->getTagInfo($newrev) ."\n";
+                // changed paths attach
+                $pathsFile = 'paths_' . $info['target'] . '.txt';
+                $mail->addTextFile($pathsFile, $pathsString);
+                if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
+                    // changed paths attach exceeded max size
+                    $mail->dropFile($pathsFile);
+                    $message .= 'Changed paths: <changed paths exceeded maximum size>';
+                }
             }
         }
-        if ($changetype != self::TYPE_CREATED) {
-            $message .= "Old tag sha: \n" . $oldrev;
-        }
 
-        $this->mail($this->emailPrefix . '[push] ' . $title , $message);
+        $mail->setMessage($message);
+
+        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthor);
+        $mail->addTo($this->mailingList);
+
+        $mail->send();
     }
 
     /**
@@ -241,35 +273,26 @@ class PostReceiveHook extends ReceiveHook
      */
     private function getTagInfo($tag)
     {
-        $info = "Target:\n";
-        $info .= \Git::gitExec('diff-tree --stat --pretty=medium -c %s', escapeshellarg($tag));
+        $temp = \Git::gitExec("for-each-ref --format=\"%%(objecttype)\n%%(*objectname)\n%%(taggername)\n%%(taggeremail)\n%%(taggerdate)\n%%(*objectname)\n%%(contents)\" %s", escapeshellarg($tag));
+        $temp = explode("\n", $temp, 6);
+        if ($temp[0] == 'tag') {
+            $info = [
+                'annotated' => true,
+                'revision' => $temp[1],
+                'tagger' => $temp[2],
+                'tagger_email' => $temp[3],
+                'tagger_date' => $temp[4],
+                'target' => $temp[5],
+                'log' => $temp[6]
+            ];
+        } else {
+            $info = [
+                'annotated' => false,
+                'revision' => $temp[1],
+                'target' => $temp[1]
+            ];
+        }
         return $info;
-    }
-
-    /**
-     * @param $tag string
-     * @return string
-     */
-    private function getAnnotatedTagInfo($tag)
-    {
-        $tagInfo = \Git::gitExec('for-each-ref --format="%%(*objectname) %%(taggername) %%(taggerdate)" %s', escapeshellarg($tag));
-        list($target, $tagger, $taggerDate) = explode(' ', $tagInfo);
-
-        $info = "Tagger: " . $tagger . "\n";
-        $info .= "Date: " . $taggerDate . "\n";
-        $info .= \Git::gitExec("cat-file tag %s | sed -e '1,/^$/d'", escapeshellarg($tag))."\n";
-        $info .= "Target:\n";
-        $info .= \Git::gitExec('diff-tree --stat --pretty=medium -c %s', escapeshellarg($target));
-        return $info;
-    }
-
-    /**
-     * @param $rev string
-     * @return bool
-     */
-    private function isAnnotatedTag($rev)
-    {
-        return trim(\Git::gitExec('for-each-ref --format="%%(objecttype)" %s', escapeshellarg($rev))) == 'tag';
     }
 
     /**
