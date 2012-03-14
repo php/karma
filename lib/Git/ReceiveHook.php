@@ -77,7 +77,7 @@ abstract class ReceiveHook
      */
     protected function getAllBranches()
     {
-        $branches = explode("\n", \Git::gitExec('for-each-ref --format="%%(refname)" "refs/heads/*"'));
+        $branches = explode("\n", trim(\Git::gitExec('for-each-ref --format="%%(refname)" "refs/heads/*"')));
         if ($branches[0] == '') $branches = [];
         return $branches;
     }

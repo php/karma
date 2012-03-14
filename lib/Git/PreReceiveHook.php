@@ -19,7 +19,7 @@ class PreReceiveHook extends ReceiveHook
     */
     public function isKarmaIgnored()
     {
-        return 'true' === \Git::gitExec('%s config karma.ignored');
+        return 'true' === \Git::gitExec('config karma.ignored');
     }
 
     public function mapInput(callable $fn) {

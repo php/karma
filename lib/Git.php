@@ -40,7 +40,6 @@ class Git
         array_shift($args);
         $cmd = vsprintf($cmd, $args);
         $output = shell_exec($cmd);
-        if ($output === NULL) throw new \Exception('Failed to call git');
-        return $output;
+        return (string)$output;
     }
 }

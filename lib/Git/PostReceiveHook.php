@@ -3,12 +3,12 @@ namespace Git;
 
 class PostReceiveHook extends ReceiveHook
 {
-    const USERS_DB_FILE = '/git/users.db';
 
     private $pushAuthor = '';
     private $pushAuthorName = '';
     private $mailingList = '';
     private $emailPrefix = '';
+    private $usersFile = '';
 
     private $alreadyExistsBranches = [];
     private $updatedBranches = [];
@@ -20,13 +20,15 @@ class PostReceiveHook extends ReceiveHook
     /**
      * @param $basePath string
      * @param $pushAuthor string
+     * @param $usersFile string
      * @param $mailingList string
      * @param $emailPrefix string
      */
-    public function __construct($basePath, $pushAuthor, $mailingList, $emailPrefix)
+    public function __construct($basePath, $pushAuthor, $usersFile, $mailingList, $emailPrefix)
     {
         parent::__construct($basePath);
 
+        $this->usersFile = $usersFile;
         $this->pushAuthor = $pushAuthor;
         $this->pushAuthorName = $this->getUserName($pushAuthor);
         $this->mailingList = $mailingList;
@@ -37,7 +39,7 @@ class PostReceiveHook extends ReceiveHook
 
     public function getUserName($user)
     {
-        $usersDB = file(__DIR__ . '/users.db');
+        $usersDB = file($this->usersFile);
         foreach ($usersDB as $userline) {
             list ($username, $fullname, $email) = explode(":", trim($userline));
             if ($username === $user) {
@@ -79,7 +81,7 @@ class PostReceiveHook extends ReceiveHook
         }
 
         // sort revisions by commit time
-        usort($this->revisions, function($a, $b){
+        uksort($this->revisions, function($a, $b){
             if ($a['time'] == $b['time']) {
                 return 0;
             }
@@ -126,7 +128,7 @@ class PostReceiveHook extends ReceiveHook
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
 
-        $status = [self::TYPE_UPDATED => 'Update', self::TYPE_CREATED => 'Create', => self::TYPE_DELETED => 'Delete'];
+        $status = [self::TYPE_UPDATED => 'update', self::TYPE_CREATED => 'create', self::TYPE_DELETED => 'delete'];
         $shortname = str_replace('refs/heads/', '', $name);
 
         // forced push
@@ -149,8 +151,8 @@ class PostReceiveHook extends ReceiveHook
                     $logString .= 'Commit: ' . $revision . "\n";
                     $logString .= 'Author: ' . $commitInfo['author'] . '(' . $commitInfo['author_email'] . ')         ' . $commitInfo['author_date'] . "\n";
                     $logString .= 'Committer: ' . $commitInfo['committer'] . '(' . $commitInfo['committer_email'] . ')      ' . $commitInfo['committer_date'] . "\n";
-                    $logString .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $revision . "\n";
-                    $logString .= "Shortlog:\n" . $commitInfo['subject'] . "\n";
+                    $logString .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
+                    $logString .= "Shortlog: " . $commitInfo['subject'] . "\n";
 
                 }
             }
@@ -166,7 +168,7 @@ class PostReceiveHook extends ReceiveHook
         $message .= 'Date: ' . date('r') . "\n";
 
         $message .= "\n";
-        $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
+        $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
         $message .= "\n";
 
         // forced push
@@ -178,7 +180,7 @@ class PostReceiveHook extends ReceiveHook
 
             if (strlen($logString) < 8192) {
                 // inline log
-                $message .= "Log:\n" . $logString . "\n";
+                $message .= "\nLog:\n" . $logString . "\n";
             } else {
                 // log attach
                 $logFile = 'log_' . $oldrev . '_' . $newrev . '.txt';
@@ -186,7 +188,7 @@ class PostReceiveHook extends ReceiveHook
                 if ((strlen($message) + $mail->getFileLength($logFile)) > 262144) {
                     // changed paths attach exceeded max size
                     $mail->dropFile($logFile);
-                    $message .= 'Log: <changed paths exceeded maximum size>';
+                    $message .= "\nLog: <changed paths exceeded maximum size>";
                 }
             }
         }
@@ -248,10 +250,10 @@ class PostReceiveHook extends ReceiveHook
     private function sendTagMail($name, $changeType, $oldrev, $newrev)
     {
 
-        $status = [self::TYPE_UPDATED => 'Update', self::TYPE_CREATED => 'Create', => self::TYPE_DELETED => 'Delete'];
+        $status = [self::TYPE_UPDATED => 'update', self::TYPE_CREATED => 'create', self::TYPE_DELETED => 'delete'];
         $shortname = str_replace('refs/tags/', '', $name);
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' tag ' . $shortname;
+        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' tag ' . $shortname);
 
         $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' .
             (($changeType != self::TYPE_CREATED) ? ' from ' . $oldrev : '' ) . "\n";
@@ -269,23 +271,24 @@ class PostReceiveHook extends ReceiveHook
             if ($info['annotated']) {
                 $message .= 'Tag: ' . $info['revision'] . "\n";
                 $message .= 'Tagger: ' . $info['tagger'] . '(' . $info['tagger_email'] . ')         ' . $info['tagger_date'] . "\n";
+                $message .= "Log:\n" . $info['log'] . "\n";
             }
 
             $message .= "\n";
-            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=tag;h=" . $info['revision'] . "\n";
+            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=tag;h=" . $info['revision'] . "\n";
             $message .= "\n";
 
             $message .= 'Target: ' . $info['target'] . "\n";
             $message .= 'Author: ' . $targetInfo['author'] . '(' . $targetInfo['author_email'] . ')         ' . $targetInfo['author_date'] . "\n";
             $message .= 'Committer: ' . $targetInfo['committer'] . '(' . $targetInfo['committer_email'] . ')      ' . $targetInfo['committer_date'] . "\n";
             if ($targetInfo['parents']) $message .= 'Parents: ' . $targetInfo['parents'] . "\n";
-            $message .= "Target link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $info['target'] . "\n";
+            $message .= "Target link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $info['target'] . "\n";
             $message .= "Target log:\n" . $targetInfo['log'] . "\n";
 
 
             if (strlen($pathsString) < 8192) {
                 // inline changed paths
-                $message .= "Changed paths:\n" . $pathsString . "\n";
+                $message .= "\nChanged paths:\n" . $pathsString . "\n";
             } else {
                 // changed paths attach
                 $pathsFile = 'paths_' . $info['target'] . '.txt';
@@ -293,7 +296,7 @@ class PostReceiveHook extends ReceiveHook
                 if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
                     // changed paths attach exceeded max size
                     $mail->dropFile($pathsFile);
-                    $message .= 'Changed paths: <changed paths exceeded maximum size>';
+                    $message .= "\nChanged paths: <changed paths exceeded maximum size>";
                 }
             }
         }
@@ -312,8 +315,8 @@ class PostReceiveHook extends ReceiveHook
      */
     private function getTagInfo($tag)
     {
-        $temp = \Git::gitExec("for-each-ref --format=\"%%(objecttype)\n%%(*objectname)\n%%(taggername)\n%%(taggeremail)\n%%(taggerdate)\n%%(*objectname)\n%%(contents)\" %s", escapeshellarg($tag));
-        $temp = explode("\n", $temp, 6); //6 elements separated by \n, last element - log message
+        $temp = \Git::gitExec("for-each-ref --format=\"%%(objecttype)\n%%(objectname)\n%%(taggername)\n%%(taggeremail)\n%%(taggerdate)\n%%(*objectname)\n%%(contents)\" %s", escapeshellarg($tag));
+        $temp = explode("\n", trim($temp), 7); //6 elements separated by \n, last element - log message
         if ($temp[0] == 'tag') {
             $info = [
                 'annotated'     => true,
@@ -384,7 +387,7 @@ class PostReceiveHook extends ReceiveHook
     {
         if (!isset($this->commitsData[$revision])) {
             $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%s%%n%%B" %s', escapeshellarg($revision));
-            $raw = explode("\n", $raw, 9); //9 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
+            $raw = explode("\n", trim($raw), 10); //10 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
             $this->commitsData[$revision] = [
                 'parents'           => $raw[1],  // %P
                 'author'            => $raw[2],  // %an
@@ -468,7 +471,7 @@ class PostReceiveHook extends ReceiveHook
         $message .= 'Committer: ' . $info['committer'] . '(' . $info['committer_email'] . ')      ' . $info['committer_date'] . "\n";
         if ($info['parents']) $message .= 'Parents: ' . $info['parents'] . "\n";
 
-        $message .= "\n" . "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $revision . "\n";
+        $message .= "\n" . "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
 
         $message .= "\nLog:\n" . $info['log'] . "\n";
 
@@ -479,10 +482,10 @@ class PostReceiveHook extends ReceiveHook
 
         if (strlen($pathsString) < 8192) {
             // inline changed paths
-            $message .= "Changed paths:\n" . $pathsString . "\n";
+            $message .= "\nChanged paths:\n" . $pathsString . "\n";
             if ((strlen($pathsString) + strlen($diff)) < 8192) {
                 // inline diff
-                $message .= "Diff:\n" . $diff . "\n";
+                $message .= "\nDiff:\n" . $diff . "\n";
             } else {
                 // diff attach
                 $diffFile = 'diff_' . $revision . '.txt';
@@ -490,7 +493,7 @@ class PostReceiveHook extends ReceiveHook
                 if ((strlen($message) + $mail->getFileLength($diffFile)) > 262144) {
                     // diff attach exceeded max size
                     $mail->dropFile($diffFile);
-                    $message .= 'Diff: <Diff exceeded maximum size>';
+                    $message .= "\nDiff: <Diff exceeded maximum size>";
                 }
             }
         } else {
@@ -500,7 +503,7 @@ class PostReceiveHook extends ReceiveHook
             if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
                 // changed paths attach exceeded max size
                 $mail->dropFile($pathsFile);
-                $message .= 'Changed paths: <changed paths exceeded maximum size>';
+                $message .= "\nChanged paths: <changed paths exceeded maximum size>";
             } else {
                 // diff attach
                 $diffFile = 'diff_' . $revision . '.txt';
