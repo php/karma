@@ -61,6 +61,15 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
+        // sort revisions by commit time
+        usort($this->revisions, function($a, $b){
+            if ($a['time'] == $b['time']) {
+                return 0;
+            }
+            return ($a['time'] < $b['time']) ? -1 : 1;
+        });
+
+        //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
             if (!$this->isRevExistsInBranches($revision, array_diff($this->allBranches, $branches))) {
@@ -181,7 +190,6 @@ class PostReceiveHook extends ReceiveHook
      */
     private function cacheRevisions($branchName, array $revisions)
     {
-        //TODO: add mail order from older commit to newer
         foreach ($revisions as $revision)
         {
             $this->revisions[$revision][$branchName] = $branchName;
@@ -369,7 +377,8 @@ class PostReceiveHook extends ReceiveHook
                 'committer_email'   => $raw[6],  // %ce
                 'committer_date'    => $raw[7],  // %cD
                 'subject'           => $raw[8],  // %s
-                'log'               => $raw[9]   // %B
+                'log'               => $raw[9],  // %B
+                'time'              => strtotime($raw[7])
             ];
         }
         return $this->commitsData[$revision];
