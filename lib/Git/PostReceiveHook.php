@@ -401,6 +401,23 @@ class PostReceiveHook extends ReceiveHook
         return $this->commitsData[$revision];
     }
 
+    private function getBugs($log)
+    {
+        $bugUrlPrefixes = [
+            'pear' => 'http://pear.php.net/bugs/',
+            'pecl' => 'https://bugs.php.net/',
+            'php' => 'https://bugs.php.net/',
+            '' => 'https://bugs.php.net/'
+        ];
+        $bugs = [];
+        if (preg_match_all('/(?:(pecl|pear|php)\s*)?(?:bug|#)[\s#:]*([0-9]+)/iuX', $log, $matchedBugs, PREG_SET_ORDER)) {
+            foreach($matchedBugs as $bug) {
+                $bugs[] = $bugUrlPrefixes[$bug[1]] . $bug[2];
+            }
+        }
+        return $bugs;
+    }
+
     /**
      * Send mail about commit.
      * Subject: [git] [commit] %PROJECT%: %PATHS%
@@ -454,6 +471,10 @@ class PostReceiveHook extends ReceiveHook
         $message .= "\n" . "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $revision . "\n";
 
         $message .= "\nLog:\n" . $info['log'] . "\n";
+
+        if ($bugs = $this->getBugs($info['log'])) {
+            $message .= "\nBugs:\n" . implode("\n", $bugs) . "\n";
+        }
 
 
         if (strlen($pathsString) < 8192) {
