@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+namespace Karma;
+
+// STATUS: not worked
+// TODO: add license
+// TODO: refactor
+// TODO: documentation
+
+
+// /git/users.db
+
+error_reporting(E_ALL | E_STRICT);
+date_default_timezone_set('UTC');
+putenv("PATH=/opt/bin:/usr/local/bin:/usr/bin:/bin");
+putenv("LC_ALL=en_US.UTF-8");
+mb_internal_encoding("UTF-8");
+
+const REPOSITORY_PATH = '/git/repositories';
+
+set_include_path('/git/checkout/karma/lib' .
+    PATH_SEPARATOR .
+    get_include_path());
+
+include 'Mail.php';
+include 'Git.php';
+include 'Git/ReceiveHook.php';
+include 'Git/PostReceiveHook.php';
+
+
+$recipients = exec('git config hooks.mailinglist');
+$emailPrefix = exec('git config hooks.emailprefix') ?: '[git]';
+
+$user = null;
+if (getenv('REMOTE_USER')) {
+    $user = getenv('REMOTE_USER');
+} else if (getenv('SSH_CONNECTION') && getenv('GL_USER')) {
+    /* gitolite user */
+    $user = getenv('GL_USER');
+}
+
+$hook = new \Git\PostReceiveHook(getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH, $user, $recipients, $emailPrefix);
+$hook->process();
