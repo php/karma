@@ -8,9 +8,10 @@ class PostReceiveHook extends ReceiveHook
     private $mailingList = '';
     private $emailPrefix = '';
 
-    private $newBranches = [];
+    private $alreadyExistsBranches = [];
     private $updatedBranches = [];
     private $revisions = [];
+    private $commitsData = [];
 
     private $allBranches = [];
 
@@ -38,16 +39,18 @@ class PostReceiveHook extends ReceiveHook
     {
         $this->hookInput();
 
-        //cache list of new and updated branches
+        //cache list of old and updated branches
+        $newBranches = [];
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_BRANCH){
                 if ($ref['changetype'] == self::TYPE_UPDATED) {
                     $this->updatedBranches[] = $ref['refname'];
                 } elseif ($ref['changetype'] == self::TYPE_CREATED) {
-                    $this->newBranches[] = $ref['refname'];
+                    $newBranches[] = $ref['refname'];
                 }
             }
         }
+        $this->alreadyExistsBranches = array_diff($this->allBranches, $newBranches);
 
         //send mails per ref push
         foreach ($this->refs as $ref) {
@@ -69,12 +72,12 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Send mail about branch.
-     * Subject: [git] [branch] %STATUS% branch %BRANCH_NAME% in %PROJECT%
+     * Subject: [git] [branch] %PROJECT%: %STATUS% branch %BRANCH_NAME%
      * Body:
      * Branch %BRANCH_NAME% in %PROJECT% was %STATUS%
      * Date: Thu, 08 Mar 2012 12:39:48 +0000(current mail date)
      *
-     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=shortlog;h=refs/heads/%BRANCH_NAME%
+     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=log;h=%SHA_NEW%;hp=%SHA_OLD%
      *
      * --part1--
      * Log:
@@ -84,17 +87,7 @@ class PostReceiveHook extends ReceiveHook
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
-     * Shortlog: %SHORT_MESSAGE%
-     * --/per commit--
-     *
-     * --/part1--
-     *
-     * (if part1 exceeded maximum size)
-     * --part1--
-     * Commits:
-     *
-     * --per commit--
-     * Commit: %SHA%
+     * Shortlog: %COMMIT_SUBJECT%
      * --/per commit--
      *
      * --/part1--
@@ -106,58 +99,79 @@ class PostReceiveHook extends ReceiveHook
      */
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
-        // FIXME: work in progress
 
+        $status = [self::TYPE_UPDATED => 'Update', self::TYPE_CREATED => 'Create', => self::TYPE_DELETED => 'Delete'];
+        $shortname = str_replace('refs/heads/', '', $name);
+
+        // forced push
         if ($changeType == self::TYPE_UPDATED) {
-            $title = "Branch " . $name . " was updated";
-        } elseif ($changeType == self::TYPE_CREATED) {
-            $title = "Branch " . $name . " was created";
+            $replacedRevisions = $this->getRevisions(escapeshellarg($newrev . '..' . $oldrev)) ?: false;
         } else {
-            $title = "Branch " . $name . " was deleted";
+            $replacedRevisions = false;
         }
-        $message = $title . "\n\n";
-
 
         if ($changeType != self::TYPE_DELETED) {
 
-            if ($changeType == self::TYPE_UPDATED) {
-                // check if push was with --force option
-                if ($replacedRevisions = $this->getRevisions(escapeshellarg($newrev . '..' . $oldrev))) {
-                    $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n";
-                }
-
-                // git rev-list old..new
-                $revisions = $this->getRevisions(escapeshellarg($oldrev . '..' . $newrev));
-
-            } else {
-                // for new branch we write log about new commits only
-                $revisions = $this->getRevisions(
-                    escapeshellarg($newrev) . ' --not ' . implode(' ', $this->escapeArrayShellArgs(array_diff($this->allBranches, $this->newBranches)))
-                );
-
-                foreach ($this->updatedBranches as $refname) {
-                    if ($this->isRevExistsInBranches($this->refs[$refname]['old'], [$name])) {
-                        $this->cacheRevisions($name, $this->getRevisions(escapeshellarg($this->refs[$refname]['old'] . '..' . $newrev)));
-                    }
-                }
-            }
-
-            $this->cacheRevisions($name, $revisions);
+            $revisions = $this->getBranchRevisions($name, $changeType, $oldrev, $newrev);
 
             if (count($revisions)) {
-                $message .= "--------LOG--------\n";
-                foreach ($revisions as $revision) {
-                    $diff = \Git::gitExec(
-                        'diff-tree --stat --pretty=medium -c %s',
-                        escapeshellarg($revision)
-                    );
 
-                    $message .= $diff."\n\n";
+                $logString = '';
+
+                foreach ($revisions as $revision) {
+                    $commitInfo = $this->getCommitInfo($revision);
+                    $logString .= 'Commit: ' . $revision . "\n";
+                    $logString .= 'Author: ' . $commitInfo['author'] . '(' . $commitInfo['author_email'] . ')         ' . $commitInfo['author_date'] . "\n";
+                    $logString .= 'Committer: ' . $commitInfo['committer'] . '(' . $commitInfo['committer_email'] . ')      ' . $commitInfo['committer_date'] . "\n";
+                    $logString .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=commitdiff;h=" . $revision . "\n";
+                    $logString .= "Shortlog:\n" . $commitInfo['subject'] . "\n";
+
                 }
             }
         }
 
-        $this->mail($this->emailPrefix . '[push] ' . $title , $message);
+
+
+
+        $mail = new \Mail();
+        $mail->setSubject($this->emailPrefix . '[branch] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
+
+        $message = 'Branch ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' . "\n";
+        $message .= 'Date: ' . date('r') . "\n";
+
+        $message .= "\n";
+        $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
+        $message .= "\n";
+
+        // forced push
+        if ($replacedRevisions) {
+            $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n\n";
+        }
+
+        if ($changeType != self::TYPE_DELETED) {
+
+            if (strlen($logString) < 8192) {
+                // inline log
+                $message .= "Log:\n" . $logString . "\n";
+            } else {
+                // log attach
+                $logFile = 'log_' . $oldrev . '_' . $newrev . '.txt';
+                $mail->addTextFile($logFile, $logString);
+                if ((strlen($message) + $mail->getFileLength($logFile)) > 262144) {
+                    // changed paths attach exceeded max size
+                    $mail->dropFile($logFile);
+                    $message .= 'Log: <changed paths exceeded maximum size>';
+                }
+            }
+        }
+
+        $mail->setMessage($message);
+
+        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthor);
+        $mail->addTo($this->mailingList);
+
+        $mail->send();
+
     }
 
 
@@ -202,22 +216,22 @@ class PostReceiveHook extends ReceiveHook
      * --/part1--
      *
      * @param $name string
-     * @param $changetype int
+     * @param $changeType int
      * @param $oldrev string
      * @param $newrev string
      */
-    private function sendTagMail($name, $changetype, $oldrev, $newrev)
+    private function sendTagMail($name, $changeType, $oldrev, $newrev)
     {
 
         $status = [self::TYPE_UPDATED => 'Update', self::TYPE_CREATED => 'Create', => self::TYPE_DELETED => 'Delete'];
         $shortname = str_replace('refs/tags/', '', $name);
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changetype] . ' tag ' . $shortname;
+        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' tag ' . $shortname;
 
-        $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changetype] . 'd' .
-            (($changetype == self::TYPE_DELETED) ? ' from ' . $oldrev : '' ) . "\n";
+        $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' .
+            (($changeType != self::TYPE_CREATED) ? ' from ' . $oldrev : '' ) . "\n";
 
-        if ($changetype != self::TYPE_DELETED) {
+        if ($changeType != self::TYPE_DELETED) {
             $info = $this->getTagInfo($name);
             $targetInfo = $this->getCommitInfo($info['target']);
             $targetPaths = $this->getChangedPaths(escapeshellarg($info['target']));
@@ -233,7 +247,7 @@ class PostReceiveHook extends ReceiveHook
             }
 
             $message .= "\n";
-            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;;a=tag;h=" . $info['revision'] . "\n";
+            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ".git;a=tag;h=" . $info['revision'] . "\n";
             $message .= "\n";
 
             $message .= 'Target: ' . $info['target'] . "\n";
@@ -274,26 +288,52 @@ class PostReceiveHook extends ReceiveHook
     private function getTagInfo($tag)
     {
         $temp = \Git::gitExec("for-each-ref --format=\"%%(objecttype)\n%%(*objectname)\n%%(taggername)\n%%(taggeremail)\n%%(taggerdate)\n%%(*objectname)\n%%(contents)\" %s", escapeshellarg($tag));
-        $temp = explode("\n", $temp, 6);
+        $temp = explode("\n", $temp, 6); //6 elements separated by \n, last element - log message
         if ($temp[0] == 'tag') {
             $info = [
-                'annotated' => true,
-                'revision' => $temp[1],
-                'tagger' => $temp[2],
-                'tagger_email' => $temp[3],
-                'tagger_date' => $temp[4],
-                'target' => $temp[5],
-                'log' => $temp[6]
+                'annotated'     => true,
+                'revision'      => $temp[1],
+                'tagger'        => $temp[2],
+                'tagger_email'  => $temp[3],
+                'tagger_date'   => $temp[4],
+                'target'        => $temp[5],
+                'log'           => $temp[6]
             ];
         } else {
             $info = [
-                'annotated' => false,
-                'revision' => $temp[1],
-                'target' => $temp[1]
+                'annotated'     => false,
+                'revision'      => $temp[1],
+                'target'        => $temp[1]
             ];
         }
         return $info;
     }
+
+
+
+    private function getBranchRevisions($name, $changeType, $oldrev, $newrev)
+    {
+        if ($changeType == self::TYPE_UPDATED) {
+            // git rev-list old..new
+            $revisions = $this->getRevisions(escapeshellarg($oldrev . '..' . $newrev));
+        } else {
+            // for new branch we write log about new commits only
+            $revisions = $this->getRevisions(
+                escapeshellarg($newrev) . ' --not ' . implode(' ', $this->escapeArrayShellArgs($this->alreadyExistsBranches))
+            );
+
+            foreach ($this->updatedBranches as $refname) {
+                if ($this->isRevExistsInBranches($this->refs[$refname]['old'], [$name])) {
+                    $this->cacheRevisions($name, $this->getRevisions(escapeshellarg($this->refs[$refname]['old'] . '..' . $newrev)));
+                }
+            }
+        }
+
+        $this->cacheRevisions($name, $revisions);
+
+        return $revisions;
+    }
+
 
     /**
      * Get list of revisions for $revRange
@@ -317,23 +357,27 @@ class PostReceiveHook extends ReceiveHook
 
     private function getCommitInfo($revision)
     {
-        $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%B" %s', escapeshellarg($revision));
-        $raw = explode("\n", $raw, 9); //8 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
-        return [
-            'parents'           => $raw[1],  // %P
-            'author'            => $raw[2],  // %an
-            'author_email'      => $raw[3],  // %ae
-            'author_date'       => $raw[4],  // %aD
-            'committer'         => $raw[5],  // %cn
-            'committer_email'   => $raw[6],  // %ce
-            'committer_date'    => $raw[7],  // %cD
-            'log'               => $raw[8]   // %B
-        ];
+        if (!isset($this->commitsData[$revision])) {
+            $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%s%%n%%B" %s', escapeshellarg($revision));
+            $raw = explode("\n", $raw, 9); //9 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
+            $this->commitsData[$revision] = [
+                'parents'           => $raw[1],  // %P
+                'author'            => $raw[2],  // %an
+                'author_email'      => $raw[3],  // %ae
+                'author_date'       => $raw[4],  // %aD
+                'committer'         => $raw[5],  // %cn
+                'committer_email'   => $raw[6],  // %ce
+                'committer_date'    => $raw[7],  // %cD
+                'subject'           => $raw[8],  // %s
+                'log'               => $raw[9]   // %B
+            ];
+        }
+        return $this->commitsData[$revision];
     }
 
     /**
      * Send mail about commit.
-     * Subject: [git] [commit] %PROJECT% %PATHS%
+     * Subject: [git] [commit] %PROJECT%: %PATHS%
      * Body:
      * Commit: %SHA%
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
@@ -372,7 +416,7 @@ class PostReceiveHook extends ReceiveHook
         $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[commit] ' . $this->getRepositoryName() . ' ' . implode(' ', array_keys($paths)));
+        $mail->setSubject($this->emailPrefix . '[commit] ' . $this->getRepositoryName() . ': ' . implode(' ', array_keys($paths)));
 
         $message = '';
 
@@ -429,18 +473,6 @@ class PostReceiveHook extends ReceiveHook
         $mail->send();
     }
 
-    /**
-     * @param $subject string
-     * @param $message string
-     */
-    private function mail($subject, $message) {
-        $headers = [
-            'From: ' . $this->pushAuthor . '@php.net',
-            'Reply-To: ' . $this->pushAuthor . '@php.net'
-        ];
-
-        mail($this->mailingList, $subject, $message, implode("\r\n", $headers));
-    }
 
     /**
      * @param $revision string
