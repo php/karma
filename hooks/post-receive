@@ -4,11 +4,10 @@ namespace Karma;
 
 // STATUS: not worked
 // TODO: add license
-// TODO: refactor with lib/Git
+// TODO: refactor
 // TODO: documentation
-// TODO: refactor for PHP 5.4
-// TODO: reformat mails
-// TODO: check mail length
+// TODO: run post-receive.mirror
+
 
 // /git/users.db
 

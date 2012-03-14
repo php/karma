@@ -3,8 +3,10 @@ namespace Git;
 
 class PostReceiveHook extends ReceiveHook
 {
+    const USERS_DB_FILE = '/git/users.db';
 
     private $pushAuthor = '';
+    private $pushAuthorName = '';
     private $mailingList = '';
     private $emailPrefix = '';
 
@@ -26,11 +28,26 @@ class PostReceiveHook extends ReceiveHook
         parent::__construct($basePath);
 
         $this->pushAuthor = $pushAuthor;
+        $this->pushAuthorName = $this->getUserName($pushAuthor);
         $this->mailingList = $mailingList;
         $this->emailPrefix = $emailPrefix;
 
         $this->allBranches = $this->getAllBranches();
     }
+
+    public function getUserName($user)
+    {
+        $usersDB = file(__DIR__ . '/users.db');
+        foreach ($usersDB as $userline) {
+            list ($username, $fullname, $email) = explode(":", trim($userline));
+            if ($username === $user) {
+                return $fullname;
+            }
+        }
+        return '';
+    }
+
+
 
     /**
      *
@@ -176,7 +193,7 @@ class PostReceiveHook extends ReceiveHook
 
         $mail->setMessage($message);
 
-        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthor);
+        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
         $mail->send();
@@ -283,7 +300,7 @@ class PostReceiveHook extends ReceiveHook
 
         $mail->setMessage($message);
 
-        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthor);
+        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
         $mail->send();
@@ -476,7 +493,7 @@ class PostReceiveHook extends ReceiveHook
 
         $mail->setMessage($message);
 
-        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthor);
+        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
         $mail->send();
