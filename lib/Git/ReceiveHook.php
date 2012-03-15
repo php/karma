@@ -15,6 +15,9 @@ abstract class ReceiveHook
     private $repositoryName = '';
     protected $refs = [];
 
+    /**
+     * @param $basePath Base path for all repositories
+     */
     public function __construct($basePath)
     {
         $rel_path = str_replace($basePath, '', \Git::getRepositoryPath());

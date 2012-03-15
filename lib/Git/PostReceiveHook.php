@@ -18,11 +18,11 @@ class PostReceiveHook extends ReceiveHook
     private $allBranches = [];
 
     /**
-     * @param $basePath string
-     * @param $pushAuthor string
-     * @param $usersFile string
-     * @param $mailingList string
-     * @param $emailPrefix string
+     * @param $basePath string base path for all repositories
+     * @param $pushAuthor string user who make push
+     * @param $usersFile string path to file with users data
+     * @param $mailingList string mail recipient
+     * @param $emailPrefix string prefix for mail subject
      */
     public function __construct($basePath, $pushAuthor, $usersFile, $mailingList, $emailPrefix)
     {
@@ -37,6 +37,11 @@ class PostReceiveHook extends ReceiveHook
         $this->allBranches = $this->getAllBranches();
     }
 
+    /**
+     * Find user name by nickname in users data file
+     * @param $user user nickname
+     * @return string user name
+     */
     public function getUserName($user)
     {
         $usersDB = file($this->usersFile);
@@ -52,7 +57,9 @@ class PostReceiveHook extends ReceiveHook
 
 
     /**
-     *
+     * Parse input from STDIN
+     * Mail about changes in heads(branches) and tags
+     * Mail about new commits
      */
     public function process()
     {
@@ -120,10 +127,10 @@ class PostReceiveHook extends ReceiveHook
      *
      * --/part1--
      *
-     * @param $name string
-     * @param $changeType int
-     * @param $oldrev string
-     * @param $newrev string
+     * @param $name string branch fullname (refs/heads/example)
+     * @param $changeType int delete, create or update
+     * @param $oldrev string old revision
+     * @param $newrev string new revision
      */
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
@@ -204,8 +211,9 @@ class PostReceiveHook extends ReceiveHook
 
 
     /**
-     * @param $branchName string
-     * @param array $revisions
+     * Cache revisions per branche for use it later
+     * @param $branchName string branch fullname
+     * @param array $revisions revisions array
      */
     private function cacheRevisions($branchName, array $revisions)
     {
@@ -242,10 +250,10 @@ class PostReceiveHook extends ReceiveHook
      * %PATHS%
      * --/part1--
      *
-     * @param $name string
-     * @param $changeType int
-     * @param $oldrev string
-     * @param $newrev string
+     * @param $name string tag fullname (refs/tags/example)
+     * @param $changeType int delete, create or update
+     * @param $oldrev string old revision
+     * @param $newrev string new revision
      */
     private function sendTagMail($name, $changeType, $oldrev, $newrev)
     {
@@ -310,8 +318,16 @@ class PostReceiveHook extends ReceiveHook
     }
 
     /**
-     * @param $tag string
-     * @return string
+     * Get info for tag
+     * It return array with items:
+     * 'annotated' flag,
+     * 'revision' - tag sha,
+     * 'target' - target sha (if tag not annotated it equal 'revision')
+     * only for annotated tag:
+     * 'tagger', 'tagger_email', 'tagger_date' - info about tagger person
+     * 'log' - tag message
+     * @param $tag string tag fullname
+     * @return array array with tag info
      */
     private function getTagInfo($tag)
     {
@@ -337,8 +353,15 @@ class PostReceiveHook extends ReceiveHook
         return $info;
     }
 
-
-
+    /**
+     * Find revisions for branch change
+     * Also cache revisions list for revisions mails
+     * @param $name string branch fullname (refs/heads/example)
+     * @param $changeType int delete, create or update
+     * @param $oldrev string old revision
+     * @param $newrev string new revision
+     * @return array revisions list
+     */
     private function getBranchRevisions($name, $changeType, $oldrev, $newrev)
     {
         if ($changeType == self::TYPE_UPDATED) {
@@ -350,6 +373,8 @@ class PostReceiveHook extends ReceiveHook
                 escapeshellarg($newrev) . ' --not ' . implode(' ', $this->escapeArrayShellArgs($this->alreadyExistsBranches))
             );
 
+            // for new branches we check if they was separated from other branches in same push
+            // see README.POST_RECEIVE_MAIL  "commit mail" part.
             foreach ($this->updatedBranches as $refname) {
                 if ($this->isRevExistsInBranches($this->refs[$refname]['old'], [$name])) {
                     $this->cacheRevisions($name, $this->getRevisions(escapeshellarg($this->refs[$refname]['old'] . '..' . $newrev)));
@@ -369,7 +394,7 @@ class PostReceiveHook extends ReceiveHook
      * Required already escaped string in $revRange!!!
      *
      * @param $revRange string A..B or A ^B C --not D   etc.
-     * @return array
+     * @return array revsions list
      */
     private function getRevisions($revRange)
     {
@@ -382,7 +407,20 @@ class PostReceiveHook extends ReceiveHook
     }
 
 
-
+    /**
+     * Get info for commit
+     * It return array with items:
+     * 'parents' -list of parents sha,
+     * 'author', 'author_email', 'author_date' - info about author person
+     * 'committer', 'committer_email', 'committer_date' - info about committer person
+     * 'subject' - commit subject line
+     * 'log' - full commit message
+     * 'time' - 'committer_date' in timestamp
+     *
+     * Also cache revision info
+     * @param $revision revision
+     * @return array commit info array
+     */
     private function getCommitInfo($revision)
     {
         if (!isset($this->commitsData[$revision])) {
@@ -404,6 +442,11 @@ class PostReceiveHook extends ReceiveHook
         return $this->commitsData[$revision];
     }
 
+    /**
+     * Find info about bugs in log message
+     * @param $log log message
+     * @return array array with bug numbers and links in values
+     */
     private function getBugs($log)
     {
         $bugUrlPrefixes = [
@@ -447,7 +490,7 @@ class PostReceiveHook extends ReceiveHook
      * %DIFF%
      * --/part2--
      *
-     * @param $revision string
+     * @param $revision string commit revision
      */
     private function sendCommitMail($revision)
     {
@@ -525,8 +568,9 @@ class PostReceiveHook extends ReceiveHook
 
 
     /**
-     * @param $revision string
-     * @param array $branches
+     * Check if revision exists in branches list
+     * @param $revision string revision
+     * @param array $branches branches
      * @return bool
      */
     private function isRevExistsInBranches($revision, array $branches) {

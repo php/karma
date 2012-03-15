@@ -2,10 +2,9 @@
 <?php
 namespace Karma;
 
-// STATUS: not worked
+// STATUS: may be worked
 // TODO: add license
-// TODO: refactor
-// TODO: documentation
+// TODO: refactoring and testing
 
 
 error_reporting(E_ALL | E_STRICT);

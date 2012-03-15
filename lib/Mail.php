@@ -14,8 +14,9 @@ class Mail
     const CRLF = "\r\n";
 
     /**
+     * Add attached text file to mail
      * @param $name string unique file name
-     * @param $data string
+     * @param $data string file content
      */
     public function addTextFile($name , $data)
     {
@@ -23,8 +24,9 @@ class Mail
     }
 
     /**
-     * @param $name string
-     * @return int
+     * Return length of attached file
+     * @param $name string unique file name
+     * @return int file length
      */
     public function getFileLength($name)
     {
@@ -32,6 +34,10 @@ class Mail
         return isset($this->files[$name]) ? strlen($this->files[$name]) : 0;
     }
 
+    /**
+     * Delete attached file
+     * @param $name unique file name
+     */
     public function dropFile($name)
     {
         $name = trim($name);
@@ -39,8 +45,9 @@ class Mail
     }
 
     /**
-     * @param string $email
-     * @param string $name
+     * Set "From" address
+     * @param string $email email author address
+     * @param string $name author name
      */
     public function setFrom($email, $name = '')
     {
@@ -48,8 +55,9 @@ class Mail
     }
 
     /**
-     * @param string $email
-     * @param string $name
+     * Add recipient address
+     * @param string $email recipient address
+     * @param string $name recipient name
      */
     public function addTo($email, $name = '')
     {
@@ -57,7 +65,8 @@ class Mail
     }
 
     /**
-     * @param $subject string
+     * Set mail subject
+     * @param $subject string subject
      */
     public function setSubject($subject)
     {
@@ -65,7 +74,8 @@ class Mail
     }
 
     /**
-     * @param $message string
+     * Set mail body text
+     * @param $message string body text
      */
     public function setMessage($message)
     {
@@ -74,9 +84,10 @@ class Mail
 
 
     /**
-     * @param $name string
-     * @param $value string
-     * @return string
+     * Format header string
+     * @param $name string header name
+     * @param $value string header value
+     * @return string header string
      */
     private function makeHeader($name, $value)
     {
@@ -84,8 +95,9 @@ class Mail
     }
 
     /**
-     * @param array $address
-     * @return string
+     * Format address string
+     * @param array $address array with email adress and name
+     * @return string address string
      */
     private function makeAddress(array $address)
     {
@@ -93,9 +105,10 @@ class Mail
     }
 
     /**
-     * @param $value string
-     * @param int $maxLenght
-     * @return string
+     * Cut end encode string by mb_encode_mimeheader
+     * @param $value string utf8 string
+     * @param int $maxLenght max length
+     * @return string encoded string
      */
     private function utf8SafeEncode($value, $maxLenght = null)
     {
@@ -104,7 +117,8 @@ class Mail
     }
 
     /**
-     * @return string
+     * Prepare heade part of mail
+     * @return string header part of mail
      */
     private function makeHeaders()
     {
@@ -126,7 +140,8 @@ class Mail
     }
 
     /**
-     * @return string
+     * Prepare body part of mail
+     * @return string mail body
      */
     private function makeBody()
     {
@@ -153,6 +168,7 @@ class Mail
     }
 
     /**
+     * Send current mail
      * @return bool
      */
     public function send()
