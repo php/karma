@@ -87,14 +87,6 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
-        // sort revisions by commit time
-        uksort($this->revisions, function($a, $b){
-            if ($a['time'] == $b['time']) {
-                return 0;
-            }
-            return ($a['time'] < $b['time']) ? -1 : 1;
-        });
-
         //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
@@ -160,6 +152,7 @@ class PostReceiveHook extends ReceiveHook
                     $logString .= 'Committer: ' . $commitInfo['committer'] . '(' . $commitInfo['committer_email'] . ')      ' . $commitInfo['committer_date'] . "\n";
                     $logString .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
                     $logString .= "Shortlog: " . $commitInfo['subject'] . "\n";
+                    $logString .= "\n";
 
                 }
             }
@@ -415,7 +408,6 @@ class PostReceiveHook extends ReceiveHook
      * 'committer', 'committer_email', 'committer_date' - info about committer person
      * 'subject' - commit subject line
      * 'log' - full commit message
-     * 'time' - 'committer_date' in timestamp
      *
      * Also cache revision info
      * @param $revision revision
@@ -435,8 +427,7 @@ class PostReceiveHook extends ReceiveHook
                 'committer_email'   => $raw[6],  // %ce
                 'committer_date'    => $raw[7],  // %cD
                 'subject'           => $raw[8],  // %s
-                'log'               => $raw[9],  // %B
-                'time'              => strtotime($raw[7])
+                'log'               => $raw[9]
             ];
         }
         return $this->commitsData[$revision];
