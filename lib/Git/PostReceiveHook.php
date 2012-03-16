@@ -167,9 +167,11 @@ class PostReceiveHook extends ReceiveHook
         $message = 'Branch ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' . "\n";
         $message .= 'Date: ' . date('r') . "\n";
 
-        $message .= "\n";
-        $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
-        $message .= "\n";
+        if ($changeType != self::TYPE_DELETED) {
+            $message .= "\n";
+            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
+            $message .= "\n";
+        }
 
         // forced push
         if ($replacedRevisions) {
