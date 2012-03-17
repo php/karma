@@ -169,7 +169,7 @@ class PostReceiveHook extends ReceiveHook
 
         if ($changeType != self::TYPE_DELETED) {
             $message .= "\n";
-            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ";hp=" . $oldrev . "\n";
+            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ($changeType != self::TYPE_CREATED ? ";hp=" . $oldrev : "") . "\n";
             $message .= "\n";
         }
 
