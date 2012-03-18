@@ -22,7 +22,8 @@ class PreReceiveHook extends ReceiveHook
         return 'true' === \Git::gitExec('config karma.ignored');
     }
 
-    public function mapInput(callable $fn) {
+    public function mapInput(callable $fn)
+    {
         $result = [];
         foreach($this->refs as $input) {
             $result[] = $fn($input['old'], $input['new'], $input['refname']);

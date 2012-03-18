@@ -140,5 +140,7 @@ abstract class ReceiveHook
             }
         }
         $this->refs = $parsed_input;
+        return $this->refs;
     }
+
 }
