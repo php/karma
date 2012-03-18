@@ -17,12 +17,14 @@ class PostReceiveHook extends ReceiveHook
 
     private $allBranches = [];
 
+    private $branchesMailIds = [];
+
     /**
-     * @param $basePath string base path for all repositories
-     * @param $pushAuthor string user who make push
-     * @param $usersFile string path to file with users data
-     * @param $mailingList string mail recipient
-     * @param $emailPrefix string prefix for mail subject
+     * @param string $basePath base path for all repositories
+     * @param string $pushAuthor user who make push
+     * @param string $usersFile path to file with users data
+     * @param string $mailingList mail recipient
+     * @param string $emailPrefix prefix for mail subject
      */
     public function __construct($basePath, $pushAuthor, $usersFile, $mailingList, $emailPrefix)
     {
@@ -39,7 +41,7 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Find user name by nickname in users data file
-     * @param $user user nickname
+     * @param string $user user nickname
      * @return string user name
      */
     public function getUserName($user)
@@ -83,7 +85,7 @@ class PostReceiveHook extends ReceiveHook
             if ($ref['reftype'] == self::REF_TAG) {
                 $this->sendTagMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             } elseif ($ref['reftype'] == self::REF_BRANCH){
-                $this->sendBranchMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
+                $this->branchesMailIds[$ref['refname']] = $this->sendBranchMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
         }
 
@@ -91,12 +93,11 @@ class PostReceiveHook extends ReceiveHook
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
             if (!$this->isRevExistsInBranches($revision, array_diff($this->allBranches, $branches))) {
-                $this->sendCommitMail($revision);
+                $this->sendCommitMail($revision, $branches);
             }
         }
 
     }
-
     /**
      * Send mail about branch.
      * Subject: [git] [branch] %PROJECT%: %STATUS% branch %BRANCH_NAME%
@@ -119,10 +120,11 @@ class PostReceiveHook extends ReceiveHook
      *
      * --/part1--
      *
-     * @param $name string branch fullname (refs/heads/example)
-     * @param $changeType int delete, create or update
-     * @param $oldrev string old revision
-     * @param $newrev string new revision
+     * @param string $name branch fullname (refs/heads/example)
+     * @param int $changeType delete, create or update
+     * @param string $oldrev old revision
+     * @param string $newrev new revision
+     * @return string mail uniq id
      */
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
@@ -202,12 +204,13 @@ class PostReceiveHook extends ReceiveHook
 
         $mail->send();
 
+        return $mail->getId();
     }
 
 
     /**
      * Cache revisions per branche for use it later
-     * @param $branchName string branch fullname
+     * @param string $branchName branch fullname
      * @param array $revisions revisions array
      */
     private function cacheRevisions($branchName, array $revisions)
@@ -245,10 +248,10 @@ class PostReceiveHook extends ReceiveHook
      * %PATHS%
      * --/part1--
      *
-     * @param $name string tag fullname (refs/tags/example)
-     * @param $changeType int delete, create or update
-     * @param $oldrev string old revision
-     * @param $newrev string new revision
+     * @param string $name tag fullname (refs/tags/example)
+     * @param int $changeType delete, create or update
+     * @param string $oldrev old revision
+     * @param string $newrev new revision
      */
     private function sendTagMail($name, $changeType, $oldrev, $newrev)
     {
@@ -321,7 +324,7 @@ class PostReceiveHook extends ReceiveHook
      * only for annotated tag:
      * 'tagger', 'tagger_email', 'tagger_date' - info about tagger person
      * 'log' - tag message
-     * @param $tag string tag fullname
+     * @param string $tag tag fullname
      * @return array array with tag info
      */
     private function getTagInfo($tag)
@@ -351,10 +354,10 @@ class PostReceiveHook extends ReceiveHook
     /**
      * Find revisions for branch change
      * Also cache revisions list for revisions mails
-     * @param $name string branch fullname (refs/heads/example)
-     * @param $changeType int delete, create or update
-     * @param $oldrev string old revision
-     * @param $newrev string new revision
+     * @param string $name branch fullname (refs/heads/example)
+     * @param int $changeType delete, create or update
+     * @param string $oldrev old revision
+     * @param string $newrev new revision
      * @return array revisions list
      */
     private function getBranchRevisions($name, $changeType, $oldrev, $newrev)
@@ -388,7 +391,7 @@ class PostReceiveHook extends ReceiveHook
      *
      * Required already escaped string in $revRange!!!
      *
-     * @param $revRange string A..B or A ^B C --not D   etc.
+     * @param string $revRange A..B or A ^B C --not D   etc.
      * @return array revsions list
      */
     private function getRevisions($revRange)
@@ -412,7 +415,7 @@ class PostReceiveHook extends ReceiveHook
      * 'log' - full commit message
      *
      * Also cache revision info
-     * @param $revision revision
+     * @param string $revision revision
      * @return array commit info array
      */
     private function getCommitInfo($revision)
@@ -429,7 +432,7 @@ class PostReceiveHook extends ReceiveHook
                 'committer_email'   => $raw[6],  // %ce
                 'committer_date'    => $raw[7],  // %cD
                 'subject'           => $raw[8],  // %s
-                'log'               => $raw[9]
+                'log'               => $raw[9]   // %B
             ];
         }
         return $this->commitsData[$revision];
@@ -437,7 +440,7 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Find info about bugs in log message
-     * @param $log log message
+     * @param string $log log message
      * @return array array with bug numbers and links in values
      */
     private function getBugs($log)
@@ -483,9 +486,10 @@ class PostReceiveHook extends ReceiveHook
      * %DIFF%
      * --/part2--
      *
-     * @param $revision string commit revision
+     * @param string $revision commit revision
+     * @param array $branches branches in current push with this commit
      */
-    private function sendCommitMail($revision)
+    private function sendCommitMail($revision, $branches)
     {
 
         $info = $this->getCommitInfo($revision);
@@ -556,13 +560,19 @@ class PostReceiveHook extends ReceiveHook
         $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
+        foreach ($branches as $branch) {
+            if (isset($this->branchesMailIds[$branch])) {
+                $mail->addReplyTo($this->branchesMailIds[$branch]);
+            }
+        }
+
         $mail->send();
     }
 
 
     /**
      * Check if revision exists in branches list
-     * @param $revision string revision
+     * @param string $revision revision
      * @param array $branches branches
      * @return bool
      */

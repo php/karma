@@ -16,7 +16,7 @@ abstract class ReceiveHook
     protected $refs = [];
 
     /**
-     * @param $basePath Base path for all repositories
+     * @param string $basePath Base path for all repositories
      */
     public function __construct($basePath)
     {
@@ -28,10 +28,10 @@ abstract class ReceiveHook
 
     /**
      * Escape array items by escapeshellarg function
-     * @param $args
+     * @param array $args
      * @return array array with escaped items
      */
-    protected function escapeArrayShellArgs($args)
+    protected function escapeArrayShellArgs(array $args)
     {
         return array_map('escapeshellarg', $args);
     }
@@ -57,7 +57,7 @@ abstract class ReceiveHook
      *
      * Required already escaped string in $revRange!!!
      *
-     * @param $revRange
+     * @param string $revRange
      * @return array
      */
     protected function getChangedPaths($revRange)
