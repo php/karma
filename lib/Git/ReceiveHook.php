@@ -1,28 +1,41 @@
 <?php
 namespace Git;
 
-class ReceiveHook
+abstract class ReceiveHook
 {
     const INPUT_PATTERN = '@^([0-9a-f]{40}) ([0-9a-f]{40}) (.+)$@i';
 
-    private $karmaFile;
-    private $repositoryBasePath;
+    const TYPE_UPDATED = 0;
+    const TYPE_CREATED = 1;
+    const TYPE_DELETED = 2;
 
-    public function __construct($karma_file, $base_path)
+    const REF_BRANCH = 0;
+    const REF_TAG = 1;
+
+    private $repositoryName = '';
+    protected $refs = [];
+
+    /**
+     * @param $basePath Base path for all repositories
+     */
+    public function __construct($basePath)
     {
-        $this->karmaFile = $karma_file;
-        $this->repositoryBasePath = $base_path;
+        $rel_path = str_replace($basePath, '', \Git::getRepositoryPath());
+        if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
+            $this->repositoryName = $matches[1];
+        }
     }
 
     /**
-     * Returns true if git option karma.ignored is set, otherwise false.
-     *
-     * @return boolean
+     * Escape array items by escapeshellarg function
+     * @param $args
+     * @return array array with escaped items
      */
-    public function isKarmaIgnored()
+    protected function escapeArrayShellArgs($args)
     {
-        return 'true' === exec(sprintf('%s config karma.ignored', \Git::GIT_EXECUTABLE));
+        return array_map('escapeshellarg', $args);
     }
+
 
     /**
      * Returns the repository name.
@@ -34,22 +47,44 @@ class ReceiveHook
      */
     public function getRepositoryName()
     {
-        $rel_path = str_replace($this->repositoryBasePath, '', \Git::getRepositoryPath());
-        if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
-            return $matches[1];
-        }
-
-        return '';
+        return $this->repositoryName;
     }
 
-    public function mapInput(callable $fn) {
-        $result = [];
-        foreach($this->hookInput() as $input) {
-            $result[] = $fn($input['old'], $input['new'], $input['refname']);
+    /**
+     * Return array with changed paths as keys and change type as values
+     * If commit is merge commit change type will have more than one char
+     * (for example "MM")
+     *
+     * Required already escaped string in $revRange!!!
+     *
+     * @param $revRange
+     * @return array
+     */
+    protected function getChangedPaths($revRange)
+    {
+        $raw = \Git::gitExec('show --name-status --pretty="format:" %s', $revRange);
+        $paths = [];
+        if (preg_match_all('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $raw , $matches,  PREG_SET_ORDER)) {
+            foreach($matches as $item) {
+                $paths[$item[2]] = $item[1];
+            }
         }
-
-        return $result;
+        return $paths;
     }
+
+
+    /**
+     * Return array with branches names in repository
+     *
+     * @return array
+     */
+    protected function getAllBranches()
+    {
+        $branches = explode("\n", trim(\Git::gitExec('for-each-ref --format="%%(refname)" "refs/heads/*"')));
+        if ($branches[0] == '') $branches = [];
+        return $branches;
+    }
+
 
     /**
      * Parses the input from git.
@@ -58,91 +93,52 @@ class ReceiveHook
      * to the hook. We parse this input. For more information about
      * the input see githooks(5).
      *
-     * Returns an array with 'old', 'new', 'refname' keys for each ref that
-     * will be updated.
+     * Returns an array with 'old', 'new', 'refname', 'changetype', 'reftype'
+     * keys for each ref that will be updated.
      * @return array
      */
     public function hookInput()
     {
-        static $parsed_input = [];
+        $parsed_input = [];
         while (!feof(STDIN)) {
             $line = fgets(STDIN);
             if (preg_match(self::INPUT_PATTERN, $line, $matches)) {
-                $parsed_input[] = [
+
+                $ref = [
                     'old'     => $matches[1],
                     'new'     => $matches[2],
-                    'refname' => $matches[3]];
+                    'refname' => $matches[3]
+                ];
+
+                if (preg_match('~^refs/heads/.+$~', $ref['refname'])) {
+                    // git push origin branchname
+                    $ref['reftype'] = self::REF_BRANCH;
+                } elseif (preg_match('~^refs/tags/.+$~', $ref['refname'])) {
+                    // git push origin tagname
+                    $ref['reftype'] = self::REF_TAG;
+                } else {
+                    // not support by this script
+                    $ref['reftype'] = null;
+                }
+
+                if ($ref['old'] == \GIT::NULLREV) {
+                    // git branch branchname && git push origin branchname
+                    // git tag tagname rev && git push origin tagname
+                    $ref['changetype'] = self::TYPE_CREATED;
+                } elseif ($ref['new'] == \GIT::NULLREV) {
+                    // git branch -d branchname && git push origin :branchname
+                    // git tag -d tagname && git push origin :tagname
+                    $ref['changetype'] =  self::TYPE_DELETED;
+                } else {
+                    // git push origin branchname
+                    // git tag -f tagname rev && git push origin tagname
+                    $ref['changetype'] =  self::TYPE_UPDATED;
+                }
+
+
+                $parsed_input[$ref['refname']] = $ref;
             }
         }
-        return $parsed_input;
-    }
-
-    /**
-     * Return the content of the karma file from the karma repository.
-     *
-     * We read the content of the karma file from the karma repository index.
-     *
-     * @return string
-     */
-    public function getKarmaFile()
-    {
-        return file($this->karmaFile);
-    }
-
-    /**
-     * Returns an array of files that were updated between revision $old and $new.
-     *
-     * @param string $old The old revison number.
-     * @parma string $new The new revison umber.
-     *
-     * @return array
-     */
-    private function getReceivedPathsForRange($old, $new)
-    {
-        $repourl = \Git::getRepositoryPath();
-        $output  = [];
-
-        /* there is the case where we push a new branch. check only new commits.
-           in case its a brand new repo, no heads will be available. */
-        if ($old == \Git::NULLREV) {
-            exec(
-                sprintf("%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
-                    \Git::GIT_EXECUTABLE, $repourl), $output);
-            /* do we have heads? otherwise it's a new repo! */
-            if (count($output) > 0) {
-                $not = array_map(
-                    function($x) {
-                        return sprintf('--not %s', escapeshellarg($x));
-                    }, $output);
-                $not = implode(' ', $not);
-            }
-            exec(
-                sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s %s',
-                \Git::GIT_EXECUTABLE, $repourl, $not,
-                escapeshellarg($new)), $output);
-        } else {
-            exec(
-                sprintf('%s --git-dir=%s log --name-only --pretty=format:"" %s..%s',
-                \Git::GIT_EXECUTABLE, $repourl, escapeshellarg($old),
-                escapeshellarg($new)), $output);
-        }
-        return $output;
-    }
-
-    public function getReceivedPaths()
-    {
-        $parsed_input = $this->hookInput();
-
-        $paths = array_map(
-            function ($input) {
-                return $this->getReceivedPathsForRange($input['old'], $input['new']);
-            },
-            $parsed_input);
-
-        /* remove empty lines, and flattern the array */
-        $flattend = array_reduce($paths, 'array_merge', []);
-        $paths    = array_filter($flattend);
-
-        return array_unique($paths);
+        $this->refs = $parsed_input;
     }
 }

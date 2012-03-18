@@ -1,0 +1,119 @@
+Post receive mail script solutions.
+
+
+digits - commits,
+chars - branches (except N & O)
+N, O - new and old revisions in push per branch.
+
+------------
+Branch mail:
+This part contains info only about mail per branch. For mail per commit logic different.
+
+
+    New branch (0..N):
+
+    1 - 2 - A (already on server)
+         \
+          3 - B (pushed)
+
+    We get all commits reachable from new branch and not from all other NOT NEW branches:
+        git rev-list B --not A   ->  3-B
+
+
+    1 - 2 - A (only local)
+         \
+          3 - B (pushed)
+
+    Because A branch not pushed on server before we need mail about all commits including 1-2. e.g. 1-B
+
+
+    1 - 2 - 3 - 4 - A (already on server)
+         \     /
+          5 - 6 - B (pushed)
+
+    We can't know what we need also 5 commit in B, so we mailed only about B commit for this branch.
+    2-6 commits was mailed in A branch.
+
+
+    1 - 2 - 3 - A (already on server)
+         \   \
+          5 - 6 - B (pushed)
+    We can't know what we need also 3 commit in B mail...  any ideas?
+    Now we send mail with 5-B commits only.
+
+
+    1 - 2 - 3 - A (already on server or pushed)
+         \
+          4 - 5 - B (pushed)
+               \
+                6 - C (pushed)
+
+    If we use git rev-list B --not A C  we skip 4-5 revisions in B.
+    So we use  git rev-list B --not A. See first situation in "New branch" section.
+
+
+
+    Deleted branch (O..0):
+
+    We don't care about revisions in deleted branch. (or care?)
+
+
+    Update branch (O..N):
+
+
+    1 - 2 - O - 3 - 4 - N
+
+    Maill full log between O and N. (e.g. 3-N)  git rev-list O..N
+
+
+    1 - 2 - N                    1 - 2 - 3 - 4 - N
+            \\             or             \\
+              3 - 4 - O                     5 - 6 - O
+
+    It's mean user used --force option for pull and remove previosly revisions.
+    (rewind N revision in first case and replace 5-O revisions by 4-N)
+    We can check it by command: git rev-list N..O.
+    If result of this command not empty - we have such cases, and this
+    result is list of discarded revisions.
+
+
+------------
+Tag mail:
+
+    Add, delete and update tag:
+    If new(updated) tag is annotated - we write full info about it and target.
+    If it not annotated - only about commit.
+
+    For old(removed) tag - we write only sha of old commit/tag.
+
+
+------------
+Commit mail:
+    (Realization of this part in progress)
+
+    1 - 2 - 3 - A (pushed, but not new branch)
+
+    5 - 2 - 6 - B (pushed, but not new branch)
+
+    3 - 5 - 7 - C (already on server)
+
+    We must check was every commit on repository before or not.
+    git rev-list --max-count=1 REV --not ALL BRANCHES EXCEPT PUSHED BRANCHES WITH THIS COMMIT
+    If result empty - this commit already was pushed in one of others repository.
+    Examples:
+    for 2 rev : we send mail
+    for 3 rev : we not send mail, because it already in C branch
+
+
+    1 - 2 - 3 - A (pushed)
+         \
+          4 - 5 - B (pushed, new)
+
+    6 - 7 - 8 - C (already on server)
+
+    We must mark 1 commit as commit in branches A and B.
+    If we didn't it and run "git rev-list --max-count=1 sha_for_1_commit --not B C" we get wrong result,
+    because commit 1 also in B branch.
+    For this we get "old" revision of every updated branch and check if it placed in every new branches.
+    If it is we mark all revisions between "old" of updated branch and "new" of new branch as revision also from new branch.
+    So we get this command "git rev-list --max-count=1 sha_for_1_commit --not C"

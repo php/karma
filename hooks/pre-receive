@@ -21,6 +21,7 @@ set_include_path(
 include 'Git.php';
 include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
+include 'Git/PreReceiveHook.php';
 
 function deny($reason)
 {
@@ -104,13 +105,14 @@ if (is_null($user)) {
 
 fprintf(STDOUT, "Welcome $user.\n");
 
-$hook = new \Git\ReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
+$hook = new \Git\PreReceiveHook(getenv('PHP_KARMA_FILE') ?: KARMA_FILE,
                              getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH);
 
 if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
+$hook->hookInput();
 $repo_name = $hook->getRepositoryName();
 $pi        = new \Git\PushInformation($hook);
 $req_paths = ($pi->isForced() || $pi->isTag()) ? [''] : $hook->getReceivedPaths();
