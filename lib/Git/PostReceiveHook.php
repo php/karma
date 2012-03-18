@@ -226,7 +226,7 @@ class PostReceiveHook extends ReceiveHook
 
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[branch] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
+        $mail->setSubject($this->emailPrefix . ' branch ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
 
         $message = 'Branch ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' . "\n";
         $message .= 'Date: ' . date('r') . "\n";
@@ -320,7 +320,7 @@ class PostReceiveHook extends ReceiveHook
         $status = [self::TYPE_UPDATED => 'update', self::TYPE_CREATED => 'create', self::TYPE_DELETED => 'delete'];
         $shortname = str_replace('refs/tags/', '', $name);
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[tag] ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' tag ' . $shortname);
+        $mail->setSubject($this->emailPrefix . 'tag ' . $this->getRepositoryName() . ': ' . $status[$changeType] . ' tag ' . $shortname);
 
         $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' .
             (($changeType != self::TYPE_CREATED) ? ' from ' . $oldrev : '' ) . "\n";
@@ -562,7 +562,7 @@ class PostReceiveHook extends ReceiveHook
         $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . '[commit] ' . $this->getRepositoryName() . ': ' . implode(' ', array_keys($paths)));
+        $mail->setSubject($this->emailPrefix . ' commit ' . $this->getRepositoryName() . ': ' . implode(' ', array_keys($paths)));
 
         $message = '';
 
