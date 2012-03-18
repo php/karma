@@ -83,4 +83,17 @@ class PushInformation
 
         return array_reduce($result, function($a, $b) { return $a || $b; }, false);
     }
+
+    public function isTag()
+    {
+        $result = $this->hook->mapInput(
+            function($oldrev, $newrev, $refname) {
+                if (preg_match('@^refs/tags/.+@i', $refname)) {
+                    return true;
+                }
+                return false;
+            });
+
+        return array_reduce($result, function($a, $b) { return $a || $b; }, false);
+    }
 }

@@ -45,7 +45,7 @@ class ReceiveHook
     public function mapInput(callable $fn) {
         $result = [];
         foreach($this->hookInput() as $input) {
-            $result[] = $fn($input['old'], $input['new']);
+            $result[] = $fn($input['old'], $input['new'], $input['refname']);
         }
 
         return $result;
