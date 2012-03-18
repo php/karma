@@ -5,6 +5,7 @@ namespace Karma;
 const KARMA_FILE = '/git/checkout/SVNROOT/global_avail';
 const REPOSITORY_PATH = '/git/repositories';
 const LIB_PATH = '/git/checkout/karma/lib';
+const USERS_DB_FILE = '/git/users.db';
 
 set_include_path(
     getenv('KARMA_LIB_PATH') ?: LIB_PATH .
@@ -16,8 +17,24 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PostReceiveHook.php';
 
+$recipients = exec('git config hooks.mailinglist');
+$emailPrefix = exec('git config hooks.emailprefix') ?: '[git]';
+
+$user = null;
+if (getenv('REMOTE_USER')) {
+    $user = getenv('REMOTE_USER');
+} else if (getenv('SSH_CONNECTION') && getenv('GL_USER')) {
+    /* gitolite user */
+    $user = getenv('GL_USER');
+}
+
 $hook = new \Git\PostReceiveHook(KARMA_FILE, REPOSITORY_PATH);
-$rpath = $hook->getReceivedMessages();
+$rpath = $hook->getReceivedMessages(
+    getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH,
+    $user,
+    getenv('USERS_DB_FILE') ?: USERS_DB_FILE,
+    $recipients,
+    $emailPrefix);
 
 $template = "Automatic comment from GIT on behalf of %s
 Revision: http://git.php.net/%s
