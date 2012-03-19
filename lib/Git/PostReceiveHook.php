@@ -191,6 +191,7 @@ class PostReceiveHook extends ReceiveHook
     private function sendBranchMail($name, $changeType, $oldrev, $newrev)
     {
 
+        $logString = '';
         $status = [self::TYPE_UPDATED => 'update', self::TYPE_CREATED => 'create', self::TYPE_DELETED => 'delete'];
         $shortname = str_replace('refs/heads/', '', $name);
 
