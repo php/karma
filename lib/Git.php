@@ -40,6 +40,6 @@ class Git
         array_shift($args);
         $cmd = vsprintf($cmd, $args);
         $output = shell_exec($cmd);
-        return (string)$output;
+        return trim($output);
     }
 }
