@@ -15,7 +15,6 @@ set_include_path(
 include 'Git.php';
 include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
-include 'Git/PostReceiveHook.php';
 include 'Git/BugsWebPostReceiveHook.php';
 
 $recipients = exec('git config hooks.mailinglist');
