@@ -40,11 +40,13 @@ if (getenv('REMOTE_USER')) {
     $user = getenv('GL_USER');
 }
 
-$hook = new \Git\PostReceiveHook(
-    getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH,
-    $user,
-    getenv('USERS_DB_FILE') ?: USERS_DB_FILE,
-    $recipients,
-    $emailPrefix
-);
-$hook->process();
+if (!empty($recipients)) {
+    $hook = new \Git\PostReceiveHook(
+        getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH,
+        $user,
+        getenv('USERS_DB_FILE') ?: USERS_DB_FILE,
+        $recipients,
+        $emailPrefix
+    );
+    $hook->process();
+}
