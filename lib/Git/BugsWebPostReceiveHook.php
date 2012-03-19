@@ -37,7 +37,7 @@ class BugsWebPostReceiveHook extends ReceiveHook
         if ($old == '0000000000000000000000000000000000000000') {
             $cmd = sprintf(
                 "%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
-                self::GIT_EXECUTABLE,
+                \Git::GIT_EXECUTABLE,
                 $repourl
             );
             exec($cmd, $output);
