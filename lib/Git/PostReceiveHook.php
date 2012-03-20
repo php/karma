@@ -87,6 +87,12 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
+        foreach($this->refs as $ref) {
+            // magic populate the $this->revisions
+            if ($ref['changetype'] != self::TYPE_DELETED) {
+                $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
+            }
+        }
         //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
             // check if it commit was already in other branches
