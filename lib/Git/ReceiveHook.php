@@ -47,7 +47,7 @@ abstract class ReceiveHook
      */
     public function getRepositoryName()
     {
-        return preg_replace('@\.git$@', '', $this->repositoryName);
+        return $this->repositoryName;
     }
 
     /**
