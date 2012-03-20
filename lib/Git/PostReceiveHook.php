@@ -495,6 +495,10 @@ class PostReceiveHook extends ReceiveHook
     private function sendCommitMail($revision, $branches)
     {
 
+        $bnames = array_map(function($x) {
+                                return str_replace('refs/heads/', '', $x);
+                            }, $branches);
+
         $info = $this->getCommitInfo($revision);
         $paths = $this->getChangedPaths(escapeshellarg($revision));
         $pathsString = '';
@@ -517,7 +521,7 @@ class PostReceiveHook extends ReceiveHook
         }
         if ($info['parents']) $message .= 'Parents:   ' . $info['parents'] . "\n";
 
-        $message .= "\n" . "Branches:   " . implode(' ', $branches) . "\n";
+        $message .= "Branches:   " . implode(' ', $bnames) . "\n";
         $message .= "\n" . "Link:       http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
 
         $message .= "\nLog:\n" . $info['log'] . "\n";
