@@ -84,8 +84,6 @@ class PostReceiveHook extends ReceiveHook
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_TAG) {
                 $this->sendTagMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
-            } elseif ($ref['reftype'] == self::REF_BRANCH){
-                $this->branchesMailIds[$ref['refname']] = $this->sendBranchMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
         }
 
@@ -572,12 +570,6 @@ class PostReceiveHook extends ReceiveHook
 
             $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
             $mail->addTo($this->mailingList);
-
-            foreach ($branches as $branch) {
-                if (isset($this->branchesMailIds[$branch])) {
-                    $mail->addReplyTo($this->branchesMailIds[$branch]);
-                }
-            }
 
             $mail->send();
         }
