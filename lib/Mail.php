@@ -12,6 +12,7 @@ class Mail
     private $boundary = '';
     private $uniqId = '';
     private $replyTo = [];
+    private $timestamp = null;
 
     const CRLF = "\r\n";
 
@@ -100,6 +101,15 @@ class Mail
     }
 
     /**
+     * Set timestamp
+     * @param string $timestamp timestamp
+     */
+    public function setTimestamp($timestamp)
+    {
+        $this->timestamp = trim($timestamp);
+    }
+
+    /**
      * Set mail body text
      * @param string $message body text
      */
@@ -157,7 +167,7 @@ class Mail
             $headers[] = $this->makeHeader('In-Reply-To', $replyTo);
         }
         $headers[] = $this->makeHeader('MIME-Version', '1.0');
-        $headers[] = $this->makeHeader('Date', date(DATE_RFC2822, time()));
+        $headers[] = $this->makeHeader('Date', date(DATE_RFC2822, $this->timestamp ?: time()));
         if ($this->multipart) {
             $this->boundary = sha1($this->uniqId);
             $headers[] = $this->makeHeader('Content-Type', 'multipart/mixed; boundary="' . $this->boundary . '"');

@@ -258,6 +258,7 @@ class PostReceiveHook extends ReceiveHook
         $shortname = str_replace('refs/tags/', '', $name);
         $mail = new \Mail();
         $mail->setSubject($this->emailPrefix . 'tag ' . $this->getRepositoryShortName() . ': ' . $status[$changeType] . ' tag ' . $shortname);
+        $mail->setTimestamp(strtotime($info['tagger_date']));
 
         $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' .
             (($changeType != self::TYPE_CREATED) ? ' from ' . $oldrev : '' ) . "\n";
@@ -501,6 +502,7 @@ class PostReceiveHook extends ReceiveHook
 
         $mail = new \Mail();
         $mail->setSubject($this->emailPrefix . 'com ' . $this->getRepositoryShortName() . ': ' . $info['subject'] . ': '. implode(' ', array_keys($paths)));
+        $mail->setTimestamp(strtotime($info['author_date']));
 
         $message = '';
 
