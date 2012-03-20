@@ -162,7 +162,7 @@ class PostReceiveHook extends ReceiveHook
         }
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . 'branch ' . $this->getRepositoryShortName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
+        $mail->setSubject($this->emailPrefix . 'push ' . $this->getRepositoryShortName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
 
         $message = 'Branch ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' . "\n";
         $message .= 'Date: ' . date('r') . "\n";
