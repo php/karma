@@ -10,13 +10,39 @@ class Mail
     private $files = [];
     private $multipart = false;
     private $boundary = '';
+    private $uniqId = '';
+    private $replyTo = [];
 
     const CRLF = "\r\n";
 
+
+    public function __construct()
+    {
+        $this->uniqId = '<php-mail-' . md5(microtime()) . mt_rand() . '@git.php.net>';
+    }
+
+    /**
+     * Return unique id of mail
+     * @return string unique Id of message in format: '<php-mail-...@git.php.net';
+     */
+    public function getId()
+    {
+        return $this->uniqId;
+    }
+
+    /**
+     * Add parent mail for this mail
+     * @param string $uniqId unique Id of message in format: '<php-mail-...@git.php.net';
+     */
+    public function addReplyTo($uniqId)
+    {
+        $this->replyTo[] = $uniqId;
+    }
+
     /**
      * Add attached text file to mail
-     * @param $name string unique file name
-     * @param $data string file content
+     * @param string $name unique file name
+     * @param string $data file content
      */
     public function addTextFile($name , $data)
     {
@@ -25,7 +51,7 @@ class Mail
 
     /**
      * Return length of attached file
-     * @param $name string unique file name
+     * @param string $name unique file name
      * @return int file length
      */
     public function getFileLength($name)
@@ -36,7 +62,7 @@ class Mail
 
     /**
      * Delete attached file
-     * @param $name unique file name
+     * @param string $name unique file name
      */
     public function dropFile($name)
     {
@@ -66,7 +92,7 @@ class Mail
 
     /**
      * Set mail subject
-     * @param $subject string subject
+     * @param string $subject subject
      */
     public function setSubject($subject)
     {
@@ -75,7 +101,7 @@ class Mail
 
     /**
      * Set mail body text
-     * @param $message string body text
+     * @param string $message body text
      */
     public function setMessage($message)
     {
@@ -85,8 +111,8 @@ class Mail
 
     /**
      * Format header string
-     * @param $name string header name
-     * @param $value string header value
+     * @param string $name header name
+     * @param string $value header value
      * @return string header string
      */
     private function makeHeader($name, $value)
@@ -106,14 +132,14 @@ class Mail
 
     /**
      * Cut end encode string by mb_encode_mimeheader
-     * @param $value string utf8 string
+     * @param string $value utf8 string
      * @param int $maxLenght max length
      * @return string encoded string
      */
     private function utf8SafeEncode($value, $maxLenght = null)
     {
         if ($maxLenght) $value = mb_substr($value, 0, $maxLenght);
-        return mb_encode_mimeheader($value, 'UTF-8', 'Q');;
+        return mb_encode_mimeheader($value, 'UTF-8', 'Q');
     }
 
     /**
@@ -124,12 +150,16 @@ class Mail
     {
         $headers = [];
         $headers[] = $this->makeHeader('From', $this->makeAddress($this->from));
-        $uniq =  'php-mail-' . md5(microtime()) . mt_rand();
-        $headers[] = $this->makeHeader('Message-ID', '<' . $uniq . '@git.php.net>');
+        $headers[] = $this->makeHeader('Message-ID', $this->uniqId);
+        if (count($this->replyTo)) {
+            $replyTo = implode(' ', $this->replyTo);
+            $headers[] = $this->makeHeader('References', $replyTo);
+            $headers[] = $this->makeHeader('In-Reply-To', $replyTo);
+        }
         $headers[] = $this->makeHeader('MIME-Version', '1.0');
         $headers[] = $this->makeHeader('Date', date(DATE_RFC2822, time()));
         if ($this->multipart) {
-            $this->boundary = sha1($uniq);
+            $this->boundary = sha1($this->uniqId);
             $headers[] = $this->makeHeader('Content-Type', 'multipart/mixed; boundary="' . $this->boundary . '"');
         } else {
             $headers[] = $this->makeHeader('Content-Type', 'text/plain; charset="utf-8"');
