@@ -31,8 +31,8 @@ include 'Git/PostReceiveHook.php';
 
 $recipients = exec('git config hooks.mailinglist');
 $emailPrefix = exec('git config hooks.emailprefix');
-if ($emailprefix != '') {
-	$emailprefix . ' ';
+if ($emailPrefix != '') {
+	$emailPrefix . ' ';
 }
 
 $user = null;
