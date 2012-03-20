@@ -30,7 +30,10 @@ include 'Git/PostReceiveHook.php';
 
 
 $recipients = exec('git config hooks.mailinglist');
-$emailPrefix = exec('git config hooks.emailprefix') ?: '[git]';
+$emailPrefix = exec('git config hooks.emailprefix');
+if ($emailprefix != '') {
+	$emailprefix . ' ';
+}
 
 $user = null;
 if (getenv('REMOTE_USER')) {
