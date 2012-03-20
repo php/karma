@@ -40,14 +40,26 @@ abstract class ReceiveHook
     /**
      * Returns the repository name.
      *
-     * A repository name is the path to the repository without the .git.
-     * e.g. php-src.git -> php-src
+     * A repository name is the path to the repository with the .git.
      *
      * @return string
      */
     public function getRepositoryName()
     {
         return $this->repositoryName;
+    }
+
+    /**
+     * Returns the short repository name.
+     *
+     * A short repository name is the path to the repository without the .git.
+     * e.g. php-src.git -> php-src
+     *
+     * @return string
+     */
+    public function getRepositoryShortName()
+    {
+        return preg_replace('@\.git$@', '', $this->repositoryName);
     }
 
     /**
