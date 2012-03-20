@@ -530,10 +530,9 @@ class PostReceiveHook extends ReceiveHook
             $message .= "\nBugs:\n" . implode("\n", $bugs) . "\n";
         }
 
-
         $isTrivialMerge = empty($pathsString);
 
-        if (!$isTrivalMerge && strlen($pathsString) < 8192) {
+        if (!$isTrivialMerge && strlen($pathsString) < 8192) {
             // inline changed paths
             $message .= "\nChanged paths:\n" . $pathsString . "\n";
             if ((strlen($pathsString) + strlen($diff)) < 8192) {
