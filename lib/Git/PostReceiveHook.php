@@ -518,7 +518,9 @@ class PostReceiveHook extends ReceiveHook
         }
 
 
-        if (strlen($pathsString) < 8192) {
+        if ($pathsString == '') {
+            $message .= "\nTrivial merge\n";
+        } elseif (strlen($pathsString) < 8192) {
             // inline changed paths
             $message .= "\nChanged paths:\n" . $pathsString . "\n";
             if ((strlen($pathsString) + strlen($diff)) < 8192) {
