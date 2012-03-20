@@ -527,9 +527,9 @@ class PostReceiveHook extends ReceiveHook
         }
 
 
-        if ($pathsString == '') {
-            $message .= "\nTrivial merge\n";
-        } elseif (strlen($pathsString) < 8192) {
+        $isTrivialMerge = empty($pathsString);
+
+        if (!$isTrivalMerge && strlen($pathsString) < 8192) {
             // inline changed paths
             $message .= "\nChanged paths:\n" . $pathsString . "\n";
             if ((strlen($pathsString) + strlen($diff)) < 8192) {
@@ -564,18 +564,20 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
-        $mail->setMessage($message);
+        if (!$isTrivialMerge) {
+            $mail->setMessage($message);
 
-        $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
-        $mail->addTo($this->mailingList);
+            $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
+            $mail->addTo($this->mailingList);
 
-        foreach ($branches as $branch) {
-            if (isset($this->branchesMailIds[$branch])) {
-                $mail->addReplyTo($this->branchesMailIds[$branch]);
+            foreach ($branches as $branch) {
+                if (isset($this->branchesMailIds[$branch])) {
+                    $mail->addReplyTo($this->branchesMailIds[$branch]);
+                }
             }
-        }
 
-        $mail->send();
+            $mail->send();
+        }
     }
 
 
