@@ -567,7 +567,7 @@ class PostReceiveHook extends ReceiveHook
         $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . 'commit ' . $this->getRepositoryName() . ': ' . implode(' ', array_keys($paths)));
+        $mail->setSubject($this->emailPrefix . 'com ' . $this->getRepositoryName() . ': ' . $info['subject'] . ': '. implode(' ', array_keys($paths)));
 
         $message = '';
 
