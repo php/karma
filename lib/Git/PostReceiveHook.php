@@ -151,8 +151,8 @@ class PostReceiveHook extends ReceiveHook
                 foreach ($revisions as $revision) {
                     $commitInfo = $this->getCommitInfo($revision);
                     $logString .= 'Commit: ' . $revision . "\n";
-                    $logString .= 'Author: ' . $commitInfo['author'] . '(' . $commitInfo['author_email'] . ')         ' . $commitInfo['author_date'] . "\n";
-                    $logString .= 'Committer: ' . $commitInfo['committer'] . '(' . $commitInfo['committer_email'] . ')      ' . $commitInfo['committer_date'] . "\n";
+                    $logString .= 'Author: ' . $commitInfo['author'] . ' <' . $commitInfo['author_email'] . '>         ' . $commitInfo['author_date'] . "\n";
+                    $logString .= 'Committer: ' . $commitInfo['committer'] . ' <' . $commitInfo['committer_email'] . '>      ' . $commitInfo['committer_date'] . "\n";
                     $logString .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
                     $logString .= "Shortlog: " . $commitInfo['subject'] . "\n";
                     $logString .= "\n";
@@ -274,7 +274,7 @@ class PostReceiveHook extends ReceiveHook
 
             if ($info['annotated']) {
                 $message .= 'Tag: ' . $info['revision'] . "\n";
-                $message .= 'Tagger: ' . $info['tagger'] . '(' . $info['tagger_email'] . ')         ' . $info['tagger_date'] . "\n";
+                $message .= 'Tagger: ' . $info['tagger'] . ' <' . $info['tagger_email'] . '>         ' . $info['tagger_date'] . "\n";
                 $message .= "Log:\n" . $info['log'] . "\n";
             }
 
@@ -283,8 +283,8 @@ class PostReceiveHook extends ReceiveHook
             $message .= "\n";
 
             $message .= 'Target: ' . $info['target'] . "\n";
-            $message .= 'Author: ' . $targetInfo['author'] . '(' . $targetInfo['author_email'] . ')         ' . $targetInfo['author_date'] . "\n";
-            $message .= 'Committer: ' . $targetInfo['committer'] . '(' . $targetInfo['committer_email'] . ')      ' . $targetInfo['committer_date'] . "\n";
+            $message .= 'Author: ' . $targetInfo['author'] . ' <' . $targetInfo['author_email'] . '>         ' . $targetInfo['author_date'] . "\n";
+            $message .= 'Committer: ' . $targetInfo['committer'] . ' <' . $targetInfo['committer_email'] . '>      ' . $targetInfo['committer_date'] . "\n";
             if ($targetInfo['parents']) $message .= 'Parents: ' . $targetInfo['parents'] . "\n";
             $message .= "Target link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $info['target'] . "\n";
             $message .= "Target log:\n" . $targetInfo['log'] . "\n";
@@ -505,8 +505,8 @@ class PostReceiveHook extends ReceiveHook
         $message = '';
 
         $message .= 'Commit: ' . $revision . "\n";
-        $message .= 'Author: ' . $info['author'] . '(' . $info['author_email'] . ')         ' . $info['author_date'] . "\n";
-        $message .= 'Committer: ' . $info['committer'] . '(' . $info['committer_email'] . ')      ' . $info['committer_date'] . "\n";
+        $message .= 'Author: ' . $info['author'] . ' <' . $info['author_email'] . '>         ' . $info['author_date'] . "\n";
+        $message .= 'Committer: ' . $info['committer'] . ' <' . $info['committer_email'] . '>      ' . $info['committer_date'] . "\n";
         if ($info['parents']) $message .= 'Parents: ' . $info['parents'] . "\n";
 
         $message .= "\n" . "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
