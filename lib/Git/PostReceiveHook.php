@@ -93,7 +93,7 @@ class PostReceiveHook extends ReceiveHook
            }
         }
 
-        $unpushedBranches = array_diff($this->allBranches, $thi->updatedBranches);
+        $unpushedBranches = array_diff($this->allBranches, $this->updatedBranches);
         foreach (array_unique($revisions) as $revision) {
             if (!$this->isRevExistsInBranches($revision, $unpushedBranches)) {
                 $this->sendCommitMail($revision);
