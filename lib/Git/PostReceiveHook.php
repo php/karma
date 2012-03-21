@@ -86,10 +86,11 @@ class PostReceiveHook extends ReceiveHook
             if ($ref['reftype'] == self::REF_TAG) {
                 $this->sendTagMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
-
-            $revisions = array_merge(
-                $revisions,
-                $this->getRevisions(escapeshellarg($ref['old'] . '..' . $ref['new'])));
+            if ($ref['retype'] != self::TYPE_DELETED) {
+               $revisions = array_merge(
+                   $revisions,
+                   $this->getRevisions(escapeshellarg($ref['old'] . '..' . $ref['new'])));
+           }
         }
 
         foreach (array_unique($revisions) as $revision) {
