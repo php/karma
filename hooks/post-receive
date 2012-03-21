@@ -1,4 +1,5 @@
 #!/bin/sh
-[ -f 'hooks/post-receive.mail' ]    && hooks/post-receive.mail
-[ -f 'hooks/post-receive.bugsweb' ] && hooks/post-receive.bugsweb
+in=$(cat)
+[ -f 'hooks/post-receive.mail' ]    && (echo $in | hooks/post-receive.mail )
+[ -f 'hooks/post-receive.bugsweb' ] && (echo $in | hooks/post-receive.bugsweb )
 [ -f 'hooks/post-receive.mirror' ]  && hooks/post-receive.mirror
