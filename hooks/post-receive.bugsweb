@@ -17,9 +17,6 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/BugsWebPostReceiveHook.php';
 
-$recipients = exec('git config hooks.mailinglist');
-$emailPrefix = exec('git config hooks.emailprefix') ?: '[git]';
-
 $user = null;
 if (getenv('REMOTE_USER')) {
     $user = getenv('REMOTE_USER');
@@ -28,13 +25,10 @@ if (getenv('REMOTE_USER')) {
     $user = getenv('GL_USER');
 }
 
-$hook = new \Git\BugsWebPostReceiveHook(KARMA_FILE, REPOSITORY_PATH);
-$rpath = $hook->getReceivedMessages(
-    getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH,
-    $user,
-    getenv('USERS_DB_FILE') ?: USERS_DB_FILE,
-    $recipients,
-    $emailPrefix);
+$hook = new \Git\BugsWebPostReceiveHook(
+    getenv('GL_REPO_BASE_ABS') ?: REPOSITORY_PATH
+);
+$rpath = $hook->getReceivedMessages();
 
 $template = "Automatic comment from GIT on behalf of %s
 Revision: http://git.php.net/%s
