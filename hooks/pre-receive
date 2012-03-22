@@ -115,7 +115,7 @@ if ($hook->isKarmaIgnored()) {
 $hook->hookInput();
 $repo_name = $hook->getRepositoryName();
 $pi        = new \Git\PushInformation($hook);
-$req_paths = ($pi->isForced() || $pi->isTag()) ? [''] : $hook->getReceivedPaths();
+$req_paths = ($pi->isNewBranch() || $pi->isForced() || $pi->isTag()) ? [''] : $hook->getReceivedPaths();
 
 if (empty($req_paths)) {
     deny("We cannot figure out what you comitted!");

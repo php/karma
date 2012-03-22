@@ -71,6 +71,15 @@ class PushInformation
         return array_reduce($result, function($a, $b) { return $a || $b; }, false);
     }
 
+    public function isNewBranch()
+    {
+        $result = $this->hook->mapInput(
+            function($oldrev, $newrev) {
+                return $oldrev == \Git::NULLREV;
+            });
+        return array_reduce($result, function($a, $b) { return $a || $b; }, false);
+    }
+
     public function isTag()
     {
         $result = $this->hook->mapInput(
