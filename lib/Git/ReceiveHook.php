@@ -84,11 +84,13 @@ abstract class ReceiveHook
     {
         $raw = \Git::gitExec('show --name-status --pretty="format:" %s', $revRange);
         $paths = [];
-        if (preg_match_all('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $raw , $matches,  PREG_SET_ORDER)) {
-            foreach($matches as $item) {
-                $paths[$item[2]] = $item[1];
+        $lines = explode("\n", $raw);
+        foreach($lines as $line) {
+            if (preg_match('/([ACDMRTUXB*]+)\s+([^\n\s]+)/', $line , $matches)) {
+                $paths[$matches[2]] = $matches[1];
             }
         }
+
         return $paths;
     }
 
