@@ -11,6 +11,7 @@ set_include_path(
     getenv('KARMA_LIB_PATH') ?: LIB_PATH .
     PATH_SEPARATOR .
     get_include_path());
+date_default_timezone_set('UTC');
 
 include 'Git.php';
 include 'Git/PushInformation.php';
