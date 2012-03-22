@@ -89,7 +89,7 @@ class PostReceiveHook extends ReceiveHook
 
         foreach($this->refs as $ref) {
             // magic populate the $this->revisions
-            if ($ref['changetype'] != self::TYPE_DELETED) {
+            if ($ref['reftype'] == self::REF_BRANCH && $ref['changetype'] != self::TYPE_DELETED) {
                 $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
         }
