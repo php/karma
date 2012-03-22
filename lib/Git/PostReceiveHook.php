@@ -69,6 +69,7 @@ class PostReceiveHook extends ReceiveHook
 
         //cache list of old and updated branches
         $newBranches = [];
+        $branches = [];
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_BRANCH){
                 if ($ref['changetype'] == self::TYPE_UPDATED) {
@@ -76,6 +77,7 @@ class PostReceiveHook extends ReceiveHook
                 } elseif ($ref['changetype'] == self::TYPE_CREATED) {
                     $newBranches[] = $ref['refname'];
                 }
+                $branches[] = $ref['refname'];
             }
         }
 
@@ -93,7 +95,7 @@ class PostReceiveHook extends ReceiveHook
            }
         }
 
-        $unpushedBranches = array_diff($this->allBranches, $this->updatedBranches);
+        $unpushedBranches = array_diff($this->allBranches, $branches);
         foreach (array_unique($revisions) as $revision) {
             if (!$this->isRevExistsInBranches($revision, $unpushedBranches)) {
                 $this->sendCommitMail($revision);
