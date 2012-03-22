@@ -125,7 +125,7 @@ abstract class ReceiveHook
      */
     public function hookInput()
     {
-        $this->log('New hook call '. date('r'));
+        $this->log('New hook call ' . $this->getRepositoryName() . ' ' . date('r'));
 
         $parsed_input = [];
         while (!feof(STDIN)) {
