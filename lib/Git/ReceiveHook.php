@@ -12,6 +12,10 @@ abstract class ReceiveHook
     const REF_BRANCH = 0;
     const REF_TAG = 1;
 
+    const LOG_FILE_PATH = '/git/karmamail.log';
+
+    private $isLog = false;
+
     private $repositoryName = '';
     protected $refs = [];
 
@@ -24,6 +28,10 @@ abstract class ReceiveHook
         if (preg_match('@/(.*\.git)$@', $rel_path, $matches)) {
             $this->repositoryName = $matches[1];
         }
+    }
+
+    public function enableLog() {
+        $this->isLog = true;
     }
 
     /**
@@ -98,6 +106,12 @@ abstract class ReceiveHook
     }
 
 
+    protected function log($string) {
+        if (!$this->isLog) return;
+        $string = trim($string) . "\n";
+        file_put_contents(self::LOG_FILE_PATH, $string, FILE_APPEND);
+    }
+
     /**
      * Parses the input from git.
      *
@@ -111,10 +125,14 @@ abstract class ReceiveHook
      */
     public function hookInput()
     {
+        $this->log('New hook call '. date('r'));
+
         $parsed_input = [];
         while (!feof(STDIN)) {
             $line = fgets(STDIN);
             if (preg_match(self::INPUT_PATTERN, $line, $matches)) {
+
+                $this->log($line);
 
                 $ref = [
                     'old'     => $matches[1],

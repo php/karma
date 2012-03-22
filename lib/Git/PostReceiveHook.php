@@ -93,8 +93,10 @@ class PostReceiveHook extends ReceiveHook
                 $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
         }
+        $this->log('Found revisions: '. implode(' ', array_keys($this->revisions)));
         //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
+            var_dump($branches);
             // check if it commit was already in other branches
             if (!$this->isRevExistsInBranches($revision, array_diff($this->allBranches, $branches))) {
                 $this->sendCommitMail($revision, $branches);
@@ -571,13 +573,15 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
+        var_dump($isTrivialMerge);
         if (!$isTrivialMerge) {
             $mail->setMessage($message);
 
             $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
             $mail->addTo($this->mailingList);
 
-            $mail->send();
+            $result = $mail->send();
+            $this->log('revision ' . $revision . ($result ? ' was send' : ' error while sending'));
         }
     }
 
@@ -590,7 +594,7 @@ class PostReceiveHook extends ReceiveHook
      */
     private function isRevExistsInBranches($revision, array $branches) {
         $output = \Git::gitExec('rev-list --max-count=1 %s --not %s', escapeshellarg($revision), implode(' ', $this->escapeArrayShellArgs($branches)));
-        return !empty($output);
+        return empty($output);
     }
 
 }
