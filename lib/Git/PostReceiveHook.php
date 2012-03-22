@@ -281,7 +281,7 @@ class PostReceiveHook extends ReceiveHook
 
             if ($info['annotated']) {
                 $message .= 'Tag:         ' . $info['revision'] . "\n";
-                $message .= 'Tagger:      ' . $info['tagger'] . ' <' . $info['tagger_email'] . '>         ' . $info['tagger_date'] . "\n";
+                $message .= 'Tagger:      ' . $info['tagger'] . $info['tagger_email'] . '         ' . $info['tagger_date'] . "\n";
                 $message .= "Log:\n" . $info['log'] . "\n";
             }
 
