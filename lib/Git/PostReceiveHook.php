@@ -589,7 +589,8 @@ class PostReceiveHook extends ReceiveHook
      * @return bool
      */
     private function isRevExistsInBranches($revision, array $branches) {
-        return !(bool) \Git::gitExec('rev-list --max-count=1 %s --not %s', escapeshellarg($revision), implode(' ', $this->escapeArrayShellArgs($branches)));
+        $output = \Git::gitExec('rev-list --max-count=1 %s --not %s', escapeshellarg($revision), implode(' ', $this->escapeArrayShellArgs($branches)));
+        return !empty($output);
     }
 
 }
