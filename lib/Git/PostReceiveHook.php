@@ -96,7 +96,6 @@ class PostReceiveHook extends ReceiveHook
         $this->log('Found revisions: '. implode(' ', array_keys($this->revisions)));
         //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
-            var_dump($branches);
             // check if it commit was already in other branches
             if (!$this->isRevExistsInBranches($revision, array_diff($this->allBranches, $branches))) {
                 $this->sendCommitMail($revision, $branches);
@@ -573,7 +572,7 @@ class PostReceiveHook extends ReceiveHook
             }
         }
 
-        var_dump($isTrivialMerge);
+
         if (!$isTrivialMerge) {
             $mail->setMessage($message);
 
