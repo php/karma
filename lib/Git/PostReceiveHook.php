@@ -266,7 +266,6 @@ class PostReceiveHook extends ReceiveHook
 
         if ($changeType != self::TYPE_DELETED) {
             $info = $this->getTagInfo($name);
-            $mail->setTimestamp(strtotime($info['tagger_date']));
             $targetInfo = $this->getCommitInfo($info['target']);
             $targetPaths = $this->getChangedPaths(escapeshellarg($info['target']));
             $pathsString = '';
@@ -279,6 +278,7 @@ class PostReceiveHook extends ReceiveHook
                 $message .= 'Tag:         ' . $info['revision'] . "\n";
                 $message .= 'Tagger:      ' . $info['tagger'] . $info['tagger_email'] . '         ' . $info['tagger_date'] . "\n";
                 $message .= "Log:\n" . $info['log'] . "\n";
+                $mail->setTimestamp(strtotime($info['tagger_date']));
             }
 
             $message .= "\n";
