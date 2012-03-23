@@ -8,11 +8,12 @@ class BugsWebPostReceiveHook extends ReceiveHook
     {
         $this->hookInput();
 
-        $paths = array_map(
-            function ($input) {
-                return $this->getReceivedMessagesForRange($input['old'], $input['new']);
-            },
-            $this->refs);
+        $paths = [];
+        foreach ($this->refs as $ref) {
+            if ($ref['reftype'] == self::REF_BRANCH) {
+                $paths[] = $this->getReceivedMessagesForRange($ref['old'], $ref['new']);
+            }
+        }
 
         /* remove empty lines, and flattern the array */
         $flattend = array_reduce($paths, 'array_merge', []);
