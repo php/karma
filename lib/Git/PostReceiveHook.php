@@ -16,8 +16,6 @@ class PostReceiveHook extends ReceiveHook
 
     private $allBranches = [];
 
-    private $branchesMailIds = [];
-
     /**
      * @param string $basePath base path for all repositories
      * @param string $pushAuthor user who make push
@@ -79,19 +77,17 @@ class PostReceiveHook extends ReceiveHook
         }
         $this->alreadyExistsBranches = array_diff($this->allBranches, $newBranches);
 
-        //send mails per ref push
+
         foreach ($this->refs as $ref) {
             if ($ref['reftype'] == self::REF_TAG) {
+                // tag mail
                 $this->sendTagMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
-            }
-        }
-
-        foreach($this->refs as $ref) {
-            // magic populate the $this->revisions
-            if ($ref['reftype'] == self::REF_BRANCH && $ref['changetype'] != self::TYPE_DELETED) {
+            } elseif ($ref['reftype'] == self::REF_BRANCH && $ref['changetype'] != self::TYPE_DELETED) {
+                // magic populate the $this->revisions
                 $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
             }
         }
+
         $this->log('Found revisions: '. implode(' ', array_keys($this->revisions)));
         //send mails per commit
         foreach ($this->revisions as $revision => $branches) {
@@ -473,6 +469,7 @@ class PostReceiveHook extends ReceiveHook
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      * Parents: %SHA_PARENTS%
+     * Branches: %BRANCHES%
      *
      * Link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
      *
@@ -497,80 +494,85 @@ class PostReceiveHook extends ReceiveHook
     private function sendCommitMail($revision, $branches)
     {
 
-        $bnames = array_map(function($x) {
-                                return str_replace('refs/heads/', '', $x);
-                            }, $branches);
-
-        $info = $this->getCommitInfo($revision);
         $paths = $this->getChangedPaths(escapeshellarg($revision));
         $pathsString = '';
         foreach ($paths as $path => $action)
         {
             $pathsString .= '  ' . $action . '  ' . $path . "\n";
         }
-        $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
-
-        $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . 'com ' . $this->getRepositoryShortName() . ': ' . $info['subject'] . ': '. implode(' ', array_keys($paths)));
-        $mail->setTimestamp(strtotime($info['author_date']));
-
-        $message = '';
-
-        $message .= 'Commit:    ' . $revision . "\n";
-        $message .= 'Author:    ' . $info['author'] . ' <' . $info['author_email'] . '>         ' . $info['author_date'] . "\n";
-        if (($info['author'] != $info['committer']) || ($info['author_email'] != $info['committer_email'])) {
-            $message .= 'Committer: ' . $info['committer'] . ' <' . $info['committer_email'] . '>      ' . $info['committer_date'] . "\n";
-        }
-        if ($info['parents']) $message .= 'Parents:   ' . $info['parents'] . "\n";
-
-        $message .= "Branches:  " . implode(' ', $bnames) . "\n";
-        $message .= "\n" . "Link:       http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
-
-        $message .= "\nLog:\n" . $info['log'] . "\n";
-
-        if ($bugs = $this->getBugs($info['log'])) {
-            $message .= "\nBugs:\n" . implode("\n", $bugs) . "\n";
-        }
 
         $isTrivialMerge = empty($pathsString);
 
-        if (!$isTrivialMerge && strlen($pathsString) < 8192) {
-            // inline changed paths
-            $message .= "\nChanged paths:\n" . $pathsString . "\n";
-            if ((strlen($pathsString) + strlen($diff)) < 8192) {
-                // inline diff
-                $message .= "\nDiff:\n" . $diff . "\n";
-            } else {
-                // diff attach
-                $diffFile = 'diff_' . $revision . '.txt';
-                $mail->addTextFile($diffFile, $diff);
-                if ((strlen($message) + $mail->getFileLength($diffFile)) > 262144) {
-                    // diff attach exceeded max size
-                    $mail->dropFile($diffFile);
-                    $message .= "\nDiff: <Diff exceeded maximum size>";
-                }
-            }
-        } else {
-            // changed paths attach
-            $pathsFile = 'paths_' . $revision . '.txt';
-            $mail->addTextFile($pathsFile, $pathsString);
-            if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
-                // changed paths attach exceeded max size
-                $mail->dropFile($pathsFile);
-                $message .= "\nChanged paths: <changed paths exceeded maximum size>";
-            } else {
-                // diff attach
-                $diffFile = 'diff_' . $revision . '.txt';
-                $mail->addTextFile($diffFile, $diff);
-                if ((strlen($message) + $mail->getFileLength($pathsFile) + $mail->getFileLength($diffFile)) > 262144) {
-                    // diff attach exceeded max size
-                    $mail->dropFile($diffFile);
-                }
-            }
-        }
-
-
         if (!$isTrivialMerge) {
+
+            $bnames = array_map(
+                function($x) {
+                    return str_replace('refs/heads/', '', $x);
+                },
+                $branches
+            );
+
+            $info = $this->getCommitInfo($revision);
+
+            $diff =  \Git::gitExec('diff-tree -c -p %s', escapeshellarg($revision));
+
+            $mail = new \Mail();
+            $mail->setSubject($this->emailPrefix . 'com ' . $this->getRepositoryShortName() . ': ' . $info['subject'] . ': '. implode(' ', array_keys($paths)));
+            $mail->setTimestamp(strtotime($info['author_date']));
+
+            $message = '';
+
+            $message .= 'Commit:    ' . $revision . "\n";
+            $message .= 'Author:    ' . $info['author'] . ' <' . $info['author_email'] . '>         ' . $info['author_date'] . "\n";
+            if (($info['author'] != $info['committer']) || ($info['author_email'] != $info['committer_email'])) {
+                $message .= 'Committer: ' . $info['committer'] . ' <' . $info['committer_email'] . '>      ' . $info['committer_date'] . "\n";
+            }
+            if ($info['parents']) $message .= 'Parents:   ' . $info['parents'] . "\n";
+
+            $message .= "Branches:  " . implode(' ', $bnames) . "\n";
+            $message .= "\n" . "Link:       http://git.php.net/?p=" . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
+
+            $message .= "\nLog:\n" . $info['log'] . "\n";
+
+            if ($bugs = $this->getBugs($info['log'])) {
+                $message .= "\nBugs:\n" . implode("\n", $bugs) . "\n";
+            }
+
+            if (strlen($pathsString) < 8192) {
+                // inline changed paths
+                $message .= "\nChanged paths:\n" . $pathsString . "\n";
+                if ((strlen($pathsString) + strlen($diff)) < 8192) {
+                    // inline diff
+                    $message .= "\nDiff:\n" . $diff . "\n";
+                } else {
+                    // diff attach
+                    $diffFile = 'diff_' . $revision . '.txt';
+                    $mail->addTextFile($diffFile, $diff);
+                    if ((strlen($message) + $mail->getFileLength($diffFile)) > 262144) {
+                        // diff attach exceeded max size
+                        $mail->dropFile($diffFile);
+                        $message .= "\nDiff: <Diff exceeded maximum size>";
+                    }
+                }
+            } else {
+                // changed paths attach
+                $pathsFile = 'paths_' . $revision . '.txt';
+                $mail->addTextFile($pathsFile, $pathsString);
+                if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
+                    // changed paths attach exceeded max size
+                    $mail->dropFile($pathsFile);
+                    $message .= "\nChanged paths: <changed paths exceeded maximum size>";
+                } else {
+                    // diff attach
+                    $diffFile = 'diff_' . $revision . '.txt';
+                    $mail->addTextFile($diffFile, $diff);
+                    if ((strlen($message) + $mail->getFileLength($pathsFile) + $mail->getFileLength($diffFile)) > 262144) {
+                        // diff attach exceeded max size
+                        $mail->dropFile($diffFile);
+                    }
+                }
+            }
+
             $mail->setMessage($message);
 
             $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
