@@ -13,7 +13,6 @@ class PostReceiveHook extends ReceiveHook
     private $alreadyExistsBranches = [];
     private $updatedBranches = [];
     private $revisions = [];
-    private $commitsData = [];
 
     private $allBranches = [];
 
@@ -428,22 +427,20 @@ class PostReceiveHook extends ReceiveHook
      */
     private function getCommitInfo($revision)
     {
-        if (!isset($this->commitsData[$revision])) {
-            $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%s%%n%%B" %s', escapeshellarg($revision));
-            $raw = explode("\n", trim($raw), 10); //10 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
-            $this->commitsData[$revision] = [
-                'parents'           => $raw[1],  // %P
-                'author'            => $raw[2],  // %an
-                'author_email'      => $raw[3],  // %ae
-                'author_date'       => $raw[4],  // %aD
-                'committer'         => $raw[5],  // %cn
-                'committer_email'   => $raw[6],  // %ce
-                'committer_date'    => $raw[7],  // %cD
-                'subject'           => $raw[8],  // %s
-                'log'               => $raw[9]   // %B
-            ];
-        }
-        return $this->commitsData[$revision];
+        $raw = \Git::gitExec('rev-list -n 1 --format="%%P%%n%%an%%n%%ae%%n%%aD%%n%%cn%%n%%ce%%n%%cD%%n%%s%%n%%B" %s', escapeshellarg($revision));
+        $raw = explode("\n", trim($raw), 10); //10 elements separated by \n, last element - log message, first(skipped) element - "commit sha"
+        $data = [
+            'parents'           => $raw[1],  // %P
+            'author'            => $raw[2],  // %an
+            'author_email'      => $raw[3],  // %ae
+            'author_date'       => $raw[4],  // %aD
+            'committer'         => $raw[5],  // %cn
+            'committer_email'   => $raw[6],  // %ce
+            'committer_date'    => $raw[7],  // %cD
+            'subject'           => $raw[8],  // %s
+            'log'               => $raw[9]   // %B
+        ];
+        return $data;
     }
 
     /**
