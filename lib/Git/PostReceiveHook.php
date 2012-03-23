@@ -315,7 +315,8 @@ class PostReceiveHook extends ReceiveHook
         $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
-        $mail->send();
+        $result = $mail->send();
+        $this->log('tag ' . $name . ($result ? ' was send' : ' error while sending'));
     }
 
     /**
