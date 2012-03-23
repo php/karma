@@ -34,7 +34,7 @@ class BugsWebPostReceiveHook extends ReceiveHook
         $repourl = \Git::getRepositoryPath();
         $output = [];
 
-        if ($old == '0000000000000000000000000000000000000000') {
+        if ($old == \Git::NULLREV) {
             $cmd = sprintf(
                 "%s --git-dir=%s for-each-ref --format='%%(refname)' 'refs/heads/*'",
                 \Git::GIT_EXECUTABLE,
@@ -53,7 +53,7 @@ class BugsWebPostReceiveHook extends ReceiveHook
                 escapeshellarg($new)
             );
             exec($cmd, $output);
-        } else {
+        } elseif ($new != \Git::NULLREV) {
             $cmd = sprintf(
                 '%s --git-dir=%s log --pretty=format:"[%%ae] %%H %%s" %s..%s',
                 \Git::GIT_EXECUTABLE,
