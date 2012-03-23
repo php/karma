@@ -260,13 +260,13 @@ class PostReceiveHook extends ReceiveHook
         $shortname = str_replace('refs/tags/', '', $name);
         $mail = new \Mail();
         $mail->setSubject($this->emailPrefix . 'tag ' . $this->getRepositoryShortName() . ': ' . $status[$changeType] . ' tag ' . $shortname);
-        $mail->setTimestamp(strtotime($info['tagger_date']));
 
         $message = 'Tag ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' .
             (($changeType != self::TYPE_CREATED) ? ' from ' . $oldrev : '' ) . "\n";
 
         if ($changeType != self::TYPE_DELETED) {
             $info = $this->getTagInfo($name);
+            $mail->setTimestamp(strtotime($info['tagger_date']));
             $targetInfo = $this->getCommitInfo($info['target']);
             $targetPaths = $this->getChangedPaths(escapeshellarg($info['target']));
             $pathsString = '';
