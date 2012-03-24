@@ -150,7 +150,7 @@ abstract class ReceiveHook
                     $ref['reftype'] = self::REF_TAG;
                 } else {
                     // not support by this script
-                    $ref['reftype'] = null;
+                    $ref['reftype'] = -1;
                 }
 
                 if ($ref['old'] == \GIT::NULLREV) {
