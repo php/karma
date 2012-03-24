@@ -502,7 +502,7 @@ class PostReceiveHook extends ReceiveHook
             $pathsString .= '  ' . $action . '  ' . $path . "\n";
         }
 
-        $isTrivialMerge = empty($pathsString);
+        $isTrivialMerge = count($paths) <= 0;
 
         if (!$isTrivialMerge) {
 
