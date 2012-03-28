@@ -82,7 +82,7 @@ abstract class ReceiveHook
      */
     protected function getChangedPaths($revRange)
     {
-        $raw = \Git::gitExec('show --name-status --pretty="format:" %s', $revRange);
+        $raw = \Git::gitExec('diff-tree -r --no-commit-id -c --name-status --pretty="format:" %s', $revRange);
         $paths = [];
         $lines = explode("\n", $raw);
         foreach($lines as $line) {
