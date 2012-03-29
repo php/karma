@@ -220,6 +220,6 @@ class Mail
         $headers = $this->makeHeaders();
         $body = $this->makeBody();
 
-#        return mail($receivers, $subject, $body, $headers);
+        return mail($receivers, $subject, $body, $headers);
     }
 }
