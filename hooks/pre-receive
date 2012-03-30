@@ -118,7 +118,7 @@ $pi        = new \Git\PushInformation($hook);
 $req_paths = ($pi->isNewBranch() || $pi->isForced() || $pi->isTag()) ? [''] : $hook->getReceivedPaths();
 
 if (empty($req_paths)) {
-    deny("We cannot figure out what you comitted!");
+    $req_paths = ['']; // we can empty paths for trivial merge
 }
 
 $prefix          = sprintf('%s/', $repo_name);
