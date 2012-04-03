@@ -82,9 +82,17 @@ class PostReceiveHook extends ReceiveHook
             if ($ref['reftype'] == self::REF_TAG) {
                 // tag mail
                 $this->sendTagMail($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
-            } elseif ($ref['reftype'] == self::REF_BRANCH && $ref['changetype'] != self::TYPE_DELETED) {
-                // magic populate the $this->revisions
-                $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
+            } elseif ($ref['reftype'] == self::REF_BRANCH) {
+                if ($ref['changetype'] != self::TYPE_DELETED) {
+                    // magic populate the $this->revisions
+                    $this->getBranchRevisions($ref['refname'], $ref['changetype'], $ref['old'], $ref['new']);
+
+                    if ($ref['changetype'] == self::TYPE_UPDATED) {
+                        $this->sendDeletedCommitsMail($ref['refname'], $ref['old'], $ref['new']);
+                    }
+                } else {
+                    $this->sendDeletedBranchMail($ref['refname']);
+                }
             }
         }
 
@@ -98,113 +106,135 @@ class PostReceiveHook extends ReceiveHook
         }
 
     }
+
     /**
-     * Send mail about branch.
-     * Subject: [git] [branch] %PROJECT%: %STATUS% branch %BRANCH_NAME%
+     * Send mail about force deleted commits.
+     * Subject: del %PROJECT%: %PATHS%
      * Body:
-     * Branch %BRANCH_NAME% in %PROJECT% was %STATUS%
-     * Date: Thu, 08 Mar 2012 12:39:48 +0000(current mail date)
-     *
-     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=log;h=%SHA_NEW%;hp=%SHA_OLD%
+     * Branch: %BRANCH%
+     * Deleted commits count: %REV_COUNT%
+     * User: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
      *
      * --part1--
-     * Log:
-     *
-     * --per commit--
-     * Commit: %SHA%
-     * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
-     * Committer: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
-     * Link: http://git.php.net/?p=%PROJECT_PATH%;a=commitdiff;h=%SHA%
-     * Shortlog: %COMMIT_SUBJECT%
-     * --/per commit--
-     *
+     * Changed paths:
+     * %PATHS%
      * --/part1--
      *
+     * --part2--
+     * Diff:
+     * %DIFF%
+     * --/part2--
+     *
      * @param string $name branch fullname (refs/heads/example)
-     * @param int $changeType delete, create or update
      * @param string $oldrev old revision
      * @param string $newrev new revision
-     * @return string mail uniq id
      */
-    private function sendBranchMail($name, $changeType, $oldrev, $newrev)
+    private function sendDeletedCommitsMail($name, $oldrev, $newrev)
     {
 
-        $logString = '';
-        $status = [self::TYPE_UPDATED => 'update', self::TYPE_CREATED => 'create', self::TYPE_DELETED => 'delete'];
-        $shortname = str_replace('refs/heads/', '', $name);
+        $deletedRevisionsCount = count($this->getRevisions(escapeshellarg($newrev . '..' . $oldrev)));
 
-        // forced push
-        if ($changeType == self::TYPE_UPDATED) {
-            $replacedRevisions = $this->getRevisions(escapeshellarg($newrev . '..' . $oldrev)) ?: false;
-        } else {
-            $replacedRevisions = false;
-        }
+        if ($deletedRevisionsCount > 0) {
+            $shortName = str_replace('refs/heads/', '', $name);
 
-        if ($changeType != self::TYPE_DELETED) {
-
-            $revisions = $this->getBranchRevisions($name, $changeType, $oldrev, $newrev);
-
-            if (count($revisions)) {
-
-                $logString = '';
-
-                foreach ($revisions as $revision) {
-                    $commitInfo = $this->getCommitInfo($revision);
-                    $logString .= 'Commit:    ' . $revision . "\n";
-                    $logString .= 'Author:    ' . $commitInfo['author'] . ' <' . $commitInfo['author_email'] . '>         ' . $commitInfo['author_date'] . "\n";
-                    if (($commitInfo['author'] != $commitInfo['committer']) || ($commitInfo['author_email'] != $commitInfo['committer_email'])) {
-                        $logString .= 'Committer: ' . $commitInfo['committer'] . ' <' . $commitInfo['committer_email'] . '>      ' . $commitInfo['committer_date'] . "\n";
-                    }
-                    $logString .= 'Link:      http://git.php.net/?p=' . $this->getRepositoryName() . ";a=commitdiff;h=" . $revision . "\n";
-                    $logString .= 'Shortlog:  ' . $commitInfo['subject'] . "\n";
-                    $logString .= "\n";
-
-                }
+            $paths = $this->getChangedPaths(escapeshellarg($newrev . '..' . $oldrev), true);
+            $pathsString = '';
+            foreach ($paths as $path => $action)
+            {
+                $pathsString .= '  ' . $action . '  ' . $path . "\n";
             }
+
+            $isTrivialMerge = count($paths) <= 0;
+
+            if (!$isTrivialMerge) {
+
+                $diff =  \Git::gitExec('diff-tree --cc -r -R --no-commit-id %s', escapeshellarg($newrev . '..' . $oldrev));
+
+                $mail = new \Mail();
+                $mail->setSubject($this->emailPrefix . 'del ' . $this->getRepositoryShortName() . ': '. implode(' ', array_keys($paths)));
+                $mail->setTimestamp(strtotime(date('r')));
+
+                $message = 'Branch: ' . $shortName . "\n";
+                $message .= 'Deleted commits count: ' . $deletedRevisionsCount . "\n";
+                $message .= 'User: ' . $this->pushAuthorName . ' <' . $this->pushAuthor . '@php.net>         ' . date('r') . "\n";
+
+                if (strlen($pathsString) < 8192) {
+                    // inline changed paths
+                    $message .= "\nChanged paths:\n" . $pathsString . "\n";
+                    if ((strlen($pathsString) + strlen($diff)) < 8192) {
+                        // inline diff
+                        $message .= "\nDiff:\n" . $diff . "\n";
+                    } else {
+                        // diff attach
+                        $diffFile = 'diff_' . $newrev . '_' . $oldrev . '.txt';
+                        $mail->addTextFile($diffFile, $diff);
+                        if ((strlen($message) + $mail->getFileLength($diffFile)) > 262144) {
+                            // diff attach exceeded max size
+                            $mail->dropFile($diffFile);
+                            $message .= "\nDiff: <Diff exceeded maximum size>";
+                        }
+                    }
+                } else {
+                    // changed paths attach
+                    $pathsFile = 'paths_' . $newrev . '_' . $oldrev . '.txt';
+                    $mail->addTextFile($pathsFile, $pathsString);
+                    if ((strlen($message) + $mail->getFileLength($pathsFile)) > 262144) {
+                        // changed paths attach exceeded max size
+                        $mail->dropFile($pathsFile);
+                        $message .= "\nChanged paths: <changed paths exceeded maximum size>";
+                    } else {
+                        // diff attach
+                        $diffFile = 'diff_' . $newrev . '_' . $oldrev . '.txt';
+                        $mail->addTextFile($diffFile, $diff);
+                        if ((strlen($message) + $mail->getFileLength($pathsFile) + $mail->getFileLength($diffFile)) > 262144) {
+                            // diff attach exceeded max size
+                            $mail->dropFile($diffFile);
+                        }
+                    }
+                }
+
+                $mail->setMessage($message);
+
+                $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
+                $mail->addTo($this->mailingList);
+
+                $result = $mail->send();
+                $this->log('revisions deleted ' . $newrev . '..' . $oldrev . ($result ? ' was send' : ' error while sending'));
+            }
+
+
         }
+    }
+
+
+    /**
+     * Send mail about deleted branch.
+     * Subject: branch %PROJECT%: %BRANCH_NAME% deleted
+     * Body:
+     * Deleted branch: %BRANCH%
+     * User: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000
+     *
+     * @param string $name branch fullname (refs/heads/example)
+     */
+    private function sendDeletedBranchMail($name)
+    {
+        $shortName = str_replace('refs/heads/', '', $name);
 
         $mail = new \Mail();
-        $mail->setSubject($this->emailPrefix . 'push ' . $this->getRepositoryShortName() . ': ' . $status[$changeType] . ' branch ' . $shortname);
+        $mail->setSubject($this->emailPrefix . 'branch ' . $this->getRepositoryShortName() . ': '. $shortName . ' deleted');
+        $mail->setTimestamp(strtotime(date('r')));
 
-        $message = 'Branch ' . $shortname . ' in ' . $this->getRepositoryName() . ' was ' . $status[$changeType] . 'd' . "\n";
-        $message .= 'Date: ' . date('r') . "\n";
-
-        if ($changeType != self::TYPE_DELETED) {
-            $message .= "\n";
-            $message .= "Link: http://git.php.net/?p=" . $this->getRepositoryName() . ";a=log;h=" . $newrev . ($changeType != self::TYPE_CREATED ? ";hp=" . $oldrev : "") . "\n";
-            $message .= "\n";
-        }
-
-        // forced push
-        if ($replacedRevisions) {
-            $message .= "Discarded revisions: \n" . implode("\n", $replacedRevisions) . "\n\n";
-        }
-
-        if ($changeType != self::TYPE_DELETED) {
-
-            if (strlen($logString) < 8192) {
-                // inline log
-                $message .= "\nLog:\n" . $logString . "\n";
-            } else {
-                // log attach
-                $logFile = 'log_' . $oldrev . '_' . $newrev . '.txt';
-                $mail->addTextFile($logFile, $logString);
-                if ((strlen($message) + $mail->getFileLength($logFile)) > 262144) {
-                    // changed paths attach exceeded max size
-                    $mail->dropFile($logFile);
-                    $message .= "\nLog: <changed paths exceeded maximum size>";
-                }
-            }
-        }
+        $message = 'Deleted branch: ' . $shortName . "\n";
+        $message .= 'User: ' . $this->pushAuthorName . ' <' . $this->pushAuthor . '@php.net>         ' . date('r') . "\n";
 
         $mail->setMessage($message);
 
         $mail->setFrom($this->pushAuthor . '@php.net', $this->pushAuthorName);
         $mail->addTo($this->mailingList);
 
-        $mail->send();
+        $result = $mail->send();
+        $this->log('branch deleted ' . $shortName . ($result ? ' was send' : ' error while sending'));
 
-        return $mail->getId();
     }
 
 
@@ -224,7 +254,7 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Send mail about tag.
-     * Subject: [git] [tag] %PROJECT%: %STATUS% tag %TAGNAME%
+     * Subject: tag %PROJECT%: %STATUS% tag %TAGNAME%
      * Body:
      * Tag %TAGNAME% in %PROJECT% was %STATUS% (if sha was changed)from %OLD_SHA%
      * Tag(if annotaded): %SHA%
@@ -464,7 +494,7 @@ class PostReceiveHook extends ReceiveHook
 
     /**
      * Send mail about commit.
-     * Subject: [git] [commit] %PROJECT%: %PATHS%
+     * Subject: com %PROJECT%: %PATHS%
      * Body:
      * Commit: %SHA%
      * Author: %USER%                               Thu, 08 Mar 2012 12:39:48 +0000

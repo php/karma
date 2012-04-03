@@ -78,11 +78,12 @@ abstract class ReceiveHook
      * Required already escaped string in $revRange!!!
      *
      * @param string $revRange
+     * @param bool $reverse reverse diff
      * @return array
      */
-    protected function getChangedPaths($revRange)
+    protected function getChangedPaths($revRange, $reverse = false)
     {
-        $raw = \Git::gitExec('diff-tree -r --no-commit-id -c --name-status --pretty="format:" %s', $revRange);
+        $raw = \Git::gitExec('diff-tree ' . ($reverse ? '-R ' : '') . '-r --no-commit-id -c --name-status --pretty="format:" %s', $revRange);
         $paths = [];
         $lines = explode("\n", $raw);
         foreach($lines as $line) {
