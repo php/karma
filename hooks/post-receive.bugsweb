@@ -67,6 +67,7 @@ foreach ($rpath as $commit) {
     $commit_info['log_message'] = $commitMsg;
     $commit_info['author'] = $committer;
     $commit_info['author'] = preg_replace("#@php\.net$#", "", $committer);
+    $commit_info['user'] = $user;
     $viewvc_url_prefix = sprintf(
         'http://git.php.net/?p=%s;a=commit;h=',
         $hook->getRepositoryName()

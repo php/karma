@@ -64,7 +64,7 @@ foreach ($bug_list as $k => $bug) {
                "Log: {$commit_info['log_message']}\n";
 
     $postdata = array(
-                    'user' => $commit_info['author'],
+                    'user' => $commit_info['user'],
                     'id' => $bug['number'],
                     'ncomment' => $comment,
                     'MAGIC_COOKIE' => $SVN_MAGIC_COOKIE,
