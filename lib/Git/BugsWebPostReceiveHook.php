@@ -41,17 +41,15 @@ class BugsWebPostReceiveHook extends ReceiveHook
                 \Git::GIT_EXECUTABLE,
                 $repourl
             );
-            exec($cmd, $output);
+            exec($cmd, $heads);
 
-            /* do we have heads? otherwise it's a new repo! */
-            $heads = implode(' ', $output);
-            $not   = count($output) > 0 ? sprintf('--not %s', escapeshellarg($heads)) : '';
+            $not   = count($heads) > 0 ? ' --not ' . implode(' ', $this->escapeArrayShellArgs($heads)) : '';
             $cmd   = sprintf(
                 '%s --git-dir=%s log --pretty=format:"[%%ae] %%H %%s" %s %s',
                 \Git::GIT_EXECUTABLE,
                 $repourl,
-                $not,
-                escapeshellarg($new)
+                escapeshellarg($new),
+                $not
             );
             exec($cmd, $output);
         } elseif ($new != \Git::NULLREV) {
