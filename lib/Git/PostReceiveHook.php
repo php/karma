@@ -549,7 +549,7 @@ class PostReceiveHook extends ReceiveHook
 
             $mail = new \Mail();
             $mail->setSubject($this->emailPrefix . 'com ' . $this->getRepositoryShortName() . ': ' . $info['subject'] . ': '. implode(' ', array_keys($paths)));
-            $mail->setTimestamp(strtotime($info['author_date']));
+            $mail->setTimestamp(strtotime($info['committer_date']));
 
             $message = '';
 
