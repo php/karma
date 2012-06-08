@@ -486,7 +486,7 @@ class PostReceiveHook extends ReceiveHook
         $bugs = [];
         if (preg_match_all('/(?:(pecl|pear|php)\s*)?(?:bug|#)[\s#:]*([0-9]+)/iuX', $log, $matchedBugs, PREG_SET_ORDER)) {
             foreach($matchedBugs as $bug) {
-                $bugs[$bug[2]] = $bugUrlPrefixes[$bug[1]] . $bug[2];
+                $bugs[$bug[2]] = $bugUrlPrefixes[strtolower($bug[1])] . $bug[2];
             }
         }
         return $bugs;
