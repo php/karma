@@ -23,6 +23,10 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
+$restrictedBranches =
+    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/master'],
+     'playground.git' => ['refs/heads/dsp']];
+
 function deny($reason)
 {
     fwrite(STDERR, $reason . "\n");
@@ -119,6 +123,18 @@ $req_paths = ($pi->isNewBranch() || $pi->isForced() || $pi->isTag()) ? [''] : $h
 
 if (empty($req_paths)) {
     $req_paths = ['']; // we can empty paths for trivial merge
+}
+
+$restricted = [];
+if (isset($restrictedBranches[$repo_name])) {
+    $restricted = array_filter($restrictedBranches[$repo_name],
+        function ($branch) use ($pi) {
+            return in_array($branch, $pi->getBranches());
+        });
+}
+
+if (count($restricted) > 0 && $pi->isForced()) {
+    deny("You are allowed to overwrite commits on " . implode(', ', $restricted));
 }
 
 $prefix          = sprintf('%s/', $repo_name);

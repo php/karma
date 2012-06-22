@@ -92,4 +92,10 @@ class PushInformation
 
         return array_reduce($result, function($a, $b) { return $a || $b; }, false);
     }
+
+    public function getBranches () {
+        return $this->hook->mapInput(function ($oldrev, $newrev, $refname) {
+            return $refname;
+        });
+    }
 }
