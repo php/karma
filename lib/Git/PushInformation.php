@@ -58,17 +58,7 @@ class PushInformation
      */
     public function isForced()
     {
-        $result = $this->hook->mapInput(
-            function($oldrev, $newrev) {
-                if ($oldrev == \Git::NULLREV) {
-                    return false;
-                } else if ($newrev == \Git::NULLREV) {
-                    return true;
-                }
-                return $newrev == $this->mergeBase($oldrev, $newrev);
-            });
-
-        return array_reduce($result, function($a, $b) { return $a || $b; }, false);
+        return !$this->isFastForward();
     }
 
     public function isNewBranch()
