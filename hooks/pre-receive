@@ -133,7 +133,7 @@ if (isset($restrictedBranches[$repo_name])) {
         });
 }
 
-if (count($restricted) > 0 && $pi->isForced()) {
+if (count($restricted) > 0 && $pi->isForced() && $user != 'johannes') {
     deny("You are allowed to overwrite commits on " . implode(', ', $restricted));
 }
 
