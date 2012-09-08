@@ -69,6 +69,12 @@ foreach ($bug_list as $k => $bug) {
                     'ncomment' => $comment,
                     'MAGIC_COOKIE' => $SVN_MAGIC_COOKIE,
                 );
+
+    if (preg_match('/Fix(?:ed)?\s*(?:bug\s*)?#'. $bug['number'] .'\b/i', $commit_info['log_message'])) {
+        /* Request the automatic closing of the bug report */
+        $postdata['status'] = 'Closed';
+    }
+                
     if ($is_DEBUG) {
         unset($postdata['ncomment']);
         $postdata['getbug'] = 1;
