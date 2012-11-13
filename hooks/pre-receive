@@ -24,7 +24,7 @@ include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
 $restrictedBranches =
-    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/master'],
+    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/master'],
      'playground.git' => ['refs/heads/dsp']];
 
 function deny($reason)
