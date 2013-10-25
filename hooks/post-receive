@@ -1,4 +1,5 @@
 #!/bin/sh
+
 in=$(cat)
 
 [ -f 'hooks/post-receive.mail' ]    && (echo -n "$in" | hooks/post-receive.mail )
