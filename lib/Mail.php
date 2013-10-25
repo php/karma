@@ -2,7 +2,6 @@
 
 class Mail
 {
-
     private $from = ['name' => '', 'email' => ''];
     private $to = [];
     private $subject = '';
