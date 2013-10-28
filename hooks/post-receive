@@ -4,4 +4,4 @@ in=$(cat)
 
 [ -f 'hooks/post-receive.mail' ]    && (echo -n "$in" | hooks/post-receive.mail )
 [ -f 'hooks/post-receive.bugsweb' ] && (echo -n "$in" | hooks/post-receive.bugsweb )
-#[ -f 'hooks/post-receive.mirror' ]  && hooks/post-receive.mirror
+[ -f 'hooks/post-receive.mirror' ]  && hooks/post-receive.mirror
