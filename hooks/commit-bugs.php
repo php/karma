@@ -2,6 +2,7 @@
 
 // This script is intended to be called from post-commit. It assumes that all
 //  the appropriate variables and functions are defined.
+$is_DEBUG = false;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Constants
@@ -17,6 +18,7 @@ $bug_rpc_url = 'https://bugs.php.net/rpc.php';
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Get the list of mentioned bugs from the commit log
+file_put_contents("/var/tmp/commit_info.log",json_encode($commit_info)."\n",FILE_APPEND);
 if (preg_match_all($bug_pattern, $commit_info['log_message'], $matched_bugs, PREG_SET_ORDER) < 1) {
     // If no bugs matched, we don't have to do anything.
     return;
