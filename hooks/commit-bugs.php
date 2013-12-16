@@ -18,7 +18,6 @@ $bug_rpc_url = 'https://bugs.php.net/rpc.php';
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Get the list of mentioned bugs from the commit log
-file_put_contents("/var/tmp/commit_info.log",json_encode($commit_info)."\n",FILE_APPEND);
 if (preg_match_all($bug_pattern, $commit_info['log_message'], $matched_bugs, PREG_SET_ORDER) < 1) {
     // If no bugs matched, we don't have to do anything.
     return;
@@ -26,6 +25,7 @@ if (preg_match_all($bug_pattern, $commit_info['log_message'], $matched_bugs, PRE
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Pick the default bug project out the of the path in the first changed dir
+/*
 switch (strtolower(substr($commit_info['dirs_changed'][0], 0, 4))) {
     case 'pear':
         $bug_project_default = 'pear';
@@ -37,6 +37,8 @@ switch (strtolower(substr($commit_info['dirs_changed'][0], 0, 4))) {
         $bug_project_default = '';
         break;
 }
+*/
+$bug_project_default = '';
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Process the matches
