@@ -23,6 +23,7 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
+$weKnowWhatWeAreDoing = ['dsp', 'johannes'];
 $restrictedBranches =
     ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6', 'refs/heads/master'],
      'playground.git' => ['refs/heads/dsp']];
@@ -133,7 +134,7 @@ if (isset($restrictedBranches[$repo_name])) {
         });
 }
 
-if (count($restricted) > 0 && $pi->isForced() && $user != 'johannes') {
+if (count($restricted) > 0 && $pi->isForced() && !in_array($user, $weKnowWhatWeAreDoing)) {
     deny("You are not allowed to overwrite commits on " . implode(', ', $restricted));
 }
 
