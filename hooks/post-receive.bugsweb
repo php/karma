@@ -49,11 +49,13 @@ foreach ($rpath as $commit) {
     $commitMsg  = trim($matches[3]);
     $bugNumber  = $matches[6];
     $shortMsg   = trim($matches[7]);
-    if ($shortMsg[0] == '(') {
-        $shortMsg = substr($shortMsg, 1);
-    }
-    if ($shortMsg[strlen($shortMsg)-1] == ')') {
-        $shortMsg = substr($shortMsg, 0, -1);
+    if (strlen($shortMsg) > 0) {
+        if ($shortMsg[0] == '(') {
+            $shortMsg = substr($shortMsg, 1);
+        }
+        if ($shortMsg[strlen($shortMsg)-1] == ')') {
+            $shortMsg = substr($shortMsg, 0, -1);
+        }
     }
 
     $output = sprintf(
