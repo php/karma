@@ -24,9 +24,15 @@ include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
 $weKnowWhatWeAreDoing = ['dsp', 'johannes'];
+// On restricted branches forced pushes are only possible by users listed in $weKnowWhatWeAreDoing
 $restrictedBranches =
     ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6', 'refs/heads/master'],
      'playground.git' => ['refs/heads/dsp']];
+// On closed branches only RMs may push
+$closedBranches = [
+    'php-src.git' => ['refs/heads/PHP-5.3' => ['johannes']],
+    'playground.git' => ['refs/heads/johannes' => ['nobody']]
+];
 
 function deny($reason)
 {
@@ -124,6 +130,22 @@ $req_paths = ($pi->isNewBranch() || $pi->isForced() || $pi->isTag()) ? [''] : $h
 
 if (empty($req_paths)) {
     $req_paths = ['']; // we can empty paths for trivial merge
+}
+
+if (isset($closedBranches[$repo_name])) {
+    $closed = array_filter(array_keys($closedBranches[$repo_name]),
+        function ($branch) use ($pi) {
+            return in_array($branch, $pi->getBranches());
+        });
+
+    if (count($closed)) {
+        $rms = $closedBranches[$repo_name];
+        deny("You can not push to closed branches. ".array_map(
+            function ($branch) use ($rms) {
+                return "Please contact " . implode(', ', $rms[$branch]) . " for changes to " . $branch . PHP_EOL;
+            },
+            $closed));
+    }
 }
 
 $restricted = [];
