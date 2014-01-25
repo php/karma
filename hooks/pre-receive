@@ -134,8 +134,8 @@ if (empty($req_paths)) {
 
 if (isset($closedBranches[$repo_name])) {
     $closed = array_filter(array_keys($closedBranches[$repo_name]),
-        function ($branch) use ($pi) {
-            return in_array($branch, $pi->getBranches());
+        function ($branch) use ($pi, $user, $closedBranches, $repo_name) {
+            return in_array($branch, $pi->getBranches()) && !in_array($user, $closedBranches[$repo_name][$branch]);
         });
 
     if (count($closed)) {
