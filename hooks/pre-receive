@@ -140,11 +140,11 @@ if (isset($closedBranches[$repo_name])) {
 
     if (count($closed)) {
         $rms = $closedBranches[$repo_name];
-        deny("You can not push to closed branches. ".array_map(
+        deny("You can not push to closed branches. ". PHP_EOL . implode(PHP_EOL, array_map(
             function ($branch) use ($rms) {
-                return "Please contact " . implode(', ', $rms[$branch]) . " for changes to " . $branch . PHP_EOL;
+                return "Please contact " . implode(', ', $rms[$branch]) . " for changes to ${branch}.";
             },
-            $closed));
+            $closed)));
     }
 }
 
