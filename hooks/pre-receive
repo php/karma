@@ -23,7 +23,7 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/PreReceiveHook.php';
 
-$weKnowWhatWeAreDoing = ['dsp', 'johannes'];
+$weKnowWhatWeAreDoing = ['dsp', 'johannes', 'tyrael'];
 // On restricted branches forced pushes are only possible by users listed in $weKnowWhatWeAreDoing
 $restrictedBranches =
     ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6', 'refs/heads/master'],
