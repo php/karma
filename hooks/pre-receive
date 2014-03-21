@@ -30,7 +30,7 @@ $restrictedBranches =
      'playground.git' => ['refs/heads/dsp']];
 // On closed branches only RMs may push
 $closedBranches = [
-    'php-src.git' => ['refs/heads/PHP-5.3' => ['johannes']],
+    'php-src.git' => ['refs/heads/PHP-5.3' => ['johannes', 'rasmus', 'stas', 'jpauli', 'dsp', 'pajoye', 'tyrael']],
     'playground.git' => ['refs/heads/johannes' => ['nobody', 'johannes']]
 ];
 
