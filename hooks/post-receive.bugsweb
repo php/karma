@@ -18,6 +18,11 @@ include 'Git/PushInformation.php';
 include 'Git/ReceiveHook.php';
 include 'Git/BugsWebPostReceiveHook.php';
 
+$disabled = exec('git config hooks.disableBugs');
+if ($disabled) {
+    return;
+}
+
 $user = null;
 if (getenv('REMOTE_USER')) {
     $user = getenv('REMOTE_USER');
