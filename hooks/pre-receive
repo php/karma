@@ -32,8 +32,8 @@ $restrictedBranches =
 $closedBranches = [
     'php-src.git' => [
         'refs/heads/PHP-5.3' => ['johannes'],
-        'refs/heads/PHP-5.4' => ['stas', 'dsp'],
-        'refs/heads/PHP-5.5' => ['stas', 'dsp', 'jpauli'],
+        'refs/heads/PHP-5.4' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'kalle'],
+        'refs/heads/PHP-5.5' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'kalle'],
     ],
     'playground.git' => ['refs/heads/johannes' => ['nobody', 'johannes']]
 ];
