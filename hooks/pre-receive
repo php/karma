@@ -154,14 +154,14 @@ if (isset($closedBranches[$repo_name])) {
 }
 
 $restricted = [];
-if (strpos($repo_name, 'pecl/') !== 0  && in_array('refs/heads/master', $pi->getBranches())) {
-	$restricted[] = 'refs/heads/master';
-}
 if (isset($restrictedBranches[$repo_name])) {
-    $restricted += array_filter($restrictedBranches[$repo_name],
+    $restricted = array_filter($restrictedBranches[$repo_name],
         function ($branch) use ($pi) {
             return in_array($branch, $pi->getBranches());
         });
+}
+if (strpos($repo_name, 'pecl/') !== 0  && in_array('refs/heads/master', $pi->getBranches())) {
+	$restricted[] = 'refs/heads/master';
 }
 
 if (count($restricted) > 0 && $pi->isForced() && !in_array($user, $weKnowWhatWeAreDoing)) {
