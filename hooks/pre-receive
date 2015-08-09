@@ -25,8 +25,9 @@ include 'Git/PreReceiveHook.php';
 
 $weKnowWhatWeAreDoing = ['dsp', 'johannes', 'tyrael'];
 // On restricted branches forced pushes are only possible by users listed in $weKnowWhatWeAreDoing
+// the master branch is always protected except for the pecl/ repos, see below
 $restrictedBranches =
-    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6', 'refs/heads/master'],
+    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6'],
      'playground.git' => ['refs/heads/dsp']];
 // On closed branches only RMs may push
 $closedBranches = [
@@ -153,8 +154,11 @@ if (isset($closedBranches[$repo_name])) {
 }
 
 $restricted = [];
+if (strpos($repo_name, 'pecl/') !== 0  && in_array('refs/heads/master', $pi->getBranches())) {
+	$restricted[] = 'refs/heads/master';
+}
 if (isset($restrictedBranches[$repo_name])) {
-    $restricted = array_filter($restrictedBranches[$repo_name],
+    $restricted += array_filter($restrictedBranches[$repo_name],
         function ($branch) use ($pi) {
             return in_array($branch, $pi->getBranches());
         });
