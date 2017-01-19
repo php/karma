@@ -34,6 +34,7 @@ $closedBranches = [
         'refs/heads/PHP-5.3' => ['johannes'],
         'refs/heads/PHP-5.4' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
         'refs/heads/PHP-5.5' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
+        'refs/heads/PHP-5.6' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
     ],
     'playground.git' => ['refs/heads/johannes' => ['nobody', 'johannes']]
 ];
