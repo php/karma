@@ -26,8 +26,17 @@ include 'Git/PreReceiveHook.php';
 $weKnowWhatWeAreDoing = ['dsp', 'johannes', 'tyrael'];
 // On restricted branches forced pushes are only possible by users listed in $weKnowWhatWeAreDoing
 $restrictedBranches =
-    ['php-src.git' => ['refs/heads/PHP-5.4', 'refs/heads/PHP-5.3', 'refs/heads/PHP-5.5', 'refs/heads/PHP-5.6', 'refs/heads/PHP-7.0', 'refs/heads/PHP-7.1', 'refs/heads/master'],
-     'playground.git' => ['refs/heads/dsp']];
+    ['php-src.git' => [
+        'refs/heads/PHP-5.3',
+        'refs/heads/PHP-5.4',
+        'refs/heads/PHP-5.5',
+        'refs/heads/PHP-5.6',
+        'refs/heads/PHP-7.0',
+        'refs/heads/PHP-7.1',
+        'refs/heads/PHP-7.2',
+        'refs/heads/master'
+	],
+	'playground.git' => ['refs/heads/dsp']];
 // On closed branches only RMs may push
 $closedBranches = [
     'php-src.git' => [
@@ -35,6 +44,7 @@ $closedBranches = [
         'refs/heads/PHP-5.4' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
         'refs/heads/PHP-5.5' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
         'refs/heads/PHP-5.6' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey', 'remi', 'pollita'],
+        'refs/heads/PHP-7.0' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey', 'remi', 'pollita'],
     ],
     'playground.git' => ['refs/heads/johannes' => ['nobody', 'johannes']]
 ];
