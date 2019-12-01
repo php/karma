@@ -35,6 +35,7 @@ $restrictedBranches =
         'refs/heads/PHP-7.1',
         'refs/heads/PHP-7.2',
         'refs/heads/PHP-7.3',
+        'refs/heads/PHP-7.4',
         'refs/heads/master'
     ],
     'playground.git' => ['refs/heads/dsp']];
