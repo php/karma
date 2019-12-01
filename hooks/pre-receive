@@ -40,14 +40,19 @@ $restrictedBranches =
     ],
     'playground.git' => ['refs/heads/dsp']];
 // On closed branches only RMs may push
+$RMs = [
+    'johannes', 'stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey',
+    'remi', 'pollita', 'cmb', 'derick', 'petk'
+];
 $closedBranches = [
     'php-src.git' => [
-        'refs/heads/PHP-5.3' => ['johannes'],
-        'refs/heads/PHP-5.4' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
-        'refs/heads/PHP-5.5' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab'],
-        'refs/heads/PHP-5.6' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey', 'remi', 'pollita'],
-        'refs/heads/PHP-7.0' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey', 'remi', 'pollita'],
-        'refs/heads/PHP-7.1' => ['stas', 'dsp', 'jpauli', 'tyrael', 'ab', 'krakjoe', 'davey', 'remi', 'pollita', 'cmb'],
+        'refs/heads/PHP-5.3' => $RMs,
+        'refs/heads/PHP-5.4' => $RMs,
+        'refs/heads/PHP-5.5' => $RMs,
+        'refs/heads/PHP-5.6' => $RMs,
+        'refs/heads/PHP-7.0' => $RMs,
+        'refs/heads/PHP-7.1' => $RMs,
+        'refs/heads/PHP-7.2' => $RMs,
     ],
     'playground.git' => ['refs/heads/johannes' => ['nobody', 'johannes']]
 ];
