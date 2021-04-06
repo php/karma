@@ -148,6 +148,8 @@ if ($hook->isKarmaIgnored()) {
     accept("No karma check necessary. Thank you for your contribution.\n");
 }
 
+deny("Upstream has migrated to GitHub, please push there instead.");
+
 $hook->hookInput();
 $repo_name = $hook->getRepositoryName();
 $pi        = new \Git\PushInformation($hook);
