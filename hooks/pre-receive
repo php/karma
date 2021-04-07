@@ -159,6 +159,14 @@ if (empty($req_paths)) {
     $req_paths = ['']; // we can empty paths for trivial merge
 }
 
+if ($pi->isNewBranch()) {
+    $authorizedUsers = $RMs + $weKnowWhatWeAreDoing;
+    if (!in_array($user, $authorizedUsers)) {
+        deny('You are not allowed to create a new branch, contact one of '
+        . implode(', ', $authorizedUsers) . ' for the creation of a new branch.');
+    }
+}
+
 if (isset($closedBranches[$repo_name])) {
     $closed = array_filter(array_keys($closedBranches[$repo_name]),
         function ($branch) use ($pi, $user, $closedBranches, $repo_name) {
